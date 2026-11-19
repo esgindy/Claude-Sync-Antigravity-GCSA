@@ -1,0 +1,15 @@
+{
+  "tiers": {
+    "fast": ["gemini-3.8-flash-low", "gemini-3.8-flash-medium"],
+    "balanced": ["gemini-3.8-flash-high", "gemini-4-neon-medium"],
+    "deep": ["gemini-4-neon-xhigh", "gemini-4-neon-high", "gemini-4-argon-high"]
+  },
+  "default_tier": "auto",
+  "quota_min_fraction": 0.1,
+  "default_timeout_s": 600,
+  "max_hops": 3,
+  "swarm_max_parallel": 4,
+  "desktop_model_map": { "fast": "flash", "balanced": "flash", "deep": "pro" },
+  "approved_command_timeout_s": 120,
+  "max_inline_prompt_chars": 20000
+}

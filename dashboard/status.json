@@ -1,0 +1,267 @@
+{
+  "project": "Claude Sync Antigravity v1.0.1",
+  "owner": "Eslam Elgindy",
+  "started": "2026-11-20T03:00:00+04:00",
+  "agents": [
+    {
+      "id": "lead",
+      "name": "Claude (Lead)",
+      "model": "Opus 5.5",
+      "role": "المخطط والمراجع: العقد المعماري، الداشبورد، الدمج، الاختبار الحي، التسجيل",
+      "now": "إطلاق الوكلاء Atlas وOrbit وEcho وQuill",
+      "tasks": [
+        {
+          "id": "L1",
+          "title": "العقد المعماري وهيكل المشروع",
+          "state": "done",
+          "note": "docs/ARCHITECTURE.md"
+        },
+        {
+          "id": "L2",
+          "title": "الداشبورد الحي",
+          "state": "done",
+          "note": "الداشبورد يعمل على http://localhost:4317",
+          "updated": "2026-11-19T22:58:02.547Z"
+        },
+        {
+          "id": "L3",
+          "title": "دمج خادم Claude (claude-side)",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "L4",
+          "title": "تشغيل كل الاختبارات",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "L5",
+          "title": "اختبار حي: CLI والديسك توب والاتجاه العكسي",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "L6",
+          "title": "التسجيل في Claude Code وClaude Desktop وAntigravity",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "L7",
+          "title": "التقرير النهائي لإسلام",
+          "state": "todo",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "atlas",
+      "name": "Atlas",
+      "model": "Sonnet 5.5",
+      "role": "المحرك الأساسي: تشغيل agy، النماذج، الرصيد، الاختيار التلقائي، الاستهلاك، سجل الرسائل",
+      "now": "في الانتظار",
+      "tasks": [
+        {
+          "id": "A1",
+          "title": "الإعدادات والتخزين (paths, store)",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "A2",
+          "title": "تشغيل agy وقراءة الخطوات (agy)",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "A3",
+          "title": "قائمة النماذج والرصيد المتبقي (models, quota)",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "A4",
+          "title": "الاختيار التلقائي للنموذج (router)",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "A5",
+          "title": "الاستهلاك والتوفير وسجل الرسائل (usage, messages)",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "A6",
+          "title": "الأمان: منع الملفات السرية وإخفاء الرموز (safety)",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "A7",
+          "title": "إدارة المهام والعامل وأدوات Claude الأساسية",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "A8",
+          "title": "اختبارات المحرك",
+          "state": "todo",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "orbit",
+      "name": "Orbit",
+      "model": "Sonnet 5.5",
+      "role": "الديسك توب ووضع الفريق: إرسال للسيشنات، قراءة الرد، تشغيل عدة وكلاء بالتوازي",
+      "now": "في الانتظار",
+      "tasks": [
+        {
+          "id": "O1",
+          "title": "الاتصال بتطبيق الديسك توب (desktop)",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "O2",
+          "title": "مهمة الديسك توب وقراءة الرد بملف النتيجة",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "O3",
+          "title": "أدوات الديسك توب",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "O4",
+          "title": "وضع الفريق: تقسيم ومقارنة (swarm)",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "O5",
+          "title": "اختبارات الديسك توب والفريق",
+          "state": "todo",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "echo",
+      "name": "Echo",
+      "model": "Sonnet 5.5",
+      "role": "الاتجاه العكسي: Antigravity يطلب من Claude المراجعة أو تنفيذ مهمة",
+      "now": "في الانتظار",
+      "tasks": [
+        {
+          "id": "E1",
+          "title": "تشغيل Claude Code من الأداة (claude)",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "E2",
+          "title": "الحماية من الدوران (hops)",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "E3",
+          "title": "خادم Antigravity: claude_review وclaude_task",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "E4",
+          "title": "تسجيل الرسائل في الاتجاهين",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "E5",
+          "title": "اختبارات الاتجاه العكسي",
+          "state": "todo",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "quill",
+      "name": "Quill",
+      "model": "Haiku 5.5",
+      "role": "التوثيق والتغليف: README بلغتين، الترخيص، إضافة Claude Desktop",
+      "now": "في الانتظار",
+      "tasks": [
+        {
+          "id": "Q1",
+          "title": "الترخيص باسم إسلام وعبارة «غير رسمية»",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "Q2",
+          "title": "README بالإنجليزية",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "Q3",
+          "title": "README بالعربية",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "Q4",
+          "title": "حزمة Claude Desktop (.mcpb)",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "Q5",
+          "title": "خطوات التثبيت وسجل التغييرات v1.0.1",
+          "state": "todo",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "sentinel",
+      "name": "Sentinel",
+      "model": "Opus 5.5",
+      "role": "المراجعة الأمنية المستقلة بعد اكتمال الكود (قراءة فقط، لم يكتب أي كود)",
+      "now": "ينتظر اكتمال الكود",
+      "tasks": [
+        {
+          "id": "S1",
+          "title": "مراجعة أمنية كاملة",
+          "state": "todo",
+          "note": ""
+        },
+        {
+          "id": "S2",
+          "title": "تقرير الثغرات والإصلاحات",
+          "state": "todo",
+          "note": ""
+        }
+      ]
+    }
+  ],
+  "log": [
+    {
+      "ts": "2026-11-19T22:58:02.703Z",
+      "agent": "lead",
+      "text": "الآن: إطلاق الوكلاء Atlas وOrbit وEcho وQuill"
+    },
+    {
+      "ts": "2026-11-19T22:58:02.547Z",
+      "agent": "lead",
+      "text": "L2 الداشبورد الحي → done: الداشبورد يعمل على http://localhost:4317"
+    }
+  ],
+  "updated": "2026-11-19T22:58:02.703Z"
+}

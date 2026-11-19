@@ -1,0 +1,34 @@
+{
+  "name": "claude-sync-antigravity",
+  "version": "1.0.1",
+  "description": "Unofficial two-way bridge between Claude (Claude Code / Claude Desktop) and Google Antigravity: Claude plans and reviews, Antigravity agents execute.",
+  "author": "Eslam Elgindy",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "csa-claude": "src/servers/claude-side.mjs",
+    "csa-antigravity": "src/servers/antigravity-side.mjs"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/",
+    "dashboard": "node dashboard/server.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "os": [
+    "win32"
+  ],
+  "keywords": [
+    "mcp",
+    "claude",
+    "antigravity",
+    "agy",
+    "agents",
+    "bridge"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  }
+}

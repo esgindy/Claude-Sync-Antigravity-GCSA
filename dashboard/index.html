@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة متابعة المشروع</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#16181d;--muted:#636a76;--line:#e3e6eb;--todo:#9aa3af;--doing:#2f6fde;--done:#1f9d55;--blocked:#d64545;--bar:#e9ecf1}
+@media (prefers-color-scheme:dark){:root{--bg:#111318;--card:#1a1d24;--ink:#eceef2;--muted:#9aa1ad;--line:#2a2f39;--bar:#262b34}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 "Segoe UI",Tahoma,sans-serif}
+header{padding:18px 20px 8px;display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between}
+h1{font-size:20px;margin:0}.sub{color:var(--muted);font-size:13px}
+.wrap{padding:0 20px 24px;max-width:1400px;margin:auto}
+.overall{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.big{font-size:28px;font-weight:700}
+.bar{height:10px;background:var(--bar);border-radius:6px;overflow:hidden;margin-top:6px}.bar>i{display:block;height:100%;background:var(--done);transition:width .4s}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h2{font-size:16px;margin:0;display:flex;justify-content:space-between;gap:8px}
+.model{font-size:12px;color:var(--muted);font-weight:400}
+.role{color:var(--muted);font-size:12.5px;margin:4px 0 8px}
+.now{background:var(--bar);border-radius:8px;padding:6px 10px;font-size:13px;margin:8px 0}
+.now b{color:var(--doing)}
+ul{list-style:none;margin:8px 0 0;padding:0}li{display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-top:1px solid var(--line)}
+.dot{flex:none;margin-top:6px;width:9px;height:9px;border-radius:50%;background:var(--todo)}
+.doing .dot{background:var(--doing);box-shadow:0 0 0 3px color-mix(in srgb,var(--doing) 25%,transparent)}
+.done .dot{background:var(--done)}.blocked .dot{background:var(--blocked)}
+.t{flex:1}.note{display:block;color:var(--muted);font-size:12px}
+.pct{font-weight:700;font-size:13px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+.feed{max-height:340px;overflow:auto;font-size:13px}.feed div{padding:5px 0;border-top:1px solid var(--line)}
+.ts{color:var(--muted);font-size:11.5px;margin-inline-end:6px;direction:ltr;display:inline-block}
+.who{font-weight:600;margin-inline-end:4px}
+.msg-c{color:var(--doing)}.msg-a{color:var(--done)}
+.empty{color:var(--muted);font-size:13px;padding:6px 0}
+code{direction:ltr;unicode-bidi:embed;font-size:12px}
+</style>
+</head>
+<body>
+<header><div><h1 id="proj">…</h1><div class="sub" id="meta"></div></div><div class="sub" id="clock"></div></header>
+<div class="wrap">
+  <div class="overall"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><div><span class="big" id="opct">0%</span> <span class="sub">إنجاز المشروع</span></div><div class="sub" id="ocount"></div></div><div class="bar"><i id="obar" style="width:0"></i></div></div>
+  <div class="grid" id="agents"></div>
+  <div class="cols">
+    <div class="card"><h2>سجل النشاط</h2><div class="feed" id="log"></div></div>
+    <div class="card"><h2>المراسلات بين Claude وAntigravity</h2><div class="feed" id="msgs"></div></div>
+  </div>
+  <div class="cols">
+    <div class="card"><h2>الـ Commits</h2><div class="feed" id="commits"></div></div>
+    <div class="card"><h2>ملفات المشروع <span class="model" id="fcount"></span></h2><div class="feed" id="files"></div></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const time=t=>{try{return new Date(t).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}catch{return ''}};
+const label={todo:'لم تبدأ',doing:'قيد العمل',done:'تمت',blocked:'متوقفة'};
+async function tick(){
+  let d;try{d=await (await fetch('/api/status',{cache:'no-store'})).json()}catch{ $('clock').textContent='لا اتصال بالخادم';return}
+  const s=d.status;$('proj').textContent=s.project;$('meta').textContent='المالك: '+s.owner;
+  $('clock').textContent='آخر تحديث: '+time(d.now);
+  let all=0,done=0;
+  $('agents').innerHTML=s.agents.map(a=>{
+    const n=a.tasks.length,k=a.tasks.filter(t=>t.state==='done').length,doing=a.tasks.filter(t=>t.state==='doing').length;
+    all+=n;done+=k;const p=Math.round((k+doing*0.5)/n*100);
+    return `<div class="card"><h2><span>${esc(a.name)} <span class="model">· ${esc(a.model)}</span></span><span class="pct">${p}%</span></h2>
+    <div class="role">${esc(a.role)}</div><div class="bar"><i style="width:${p}%"></i></div>
+    <div class="now"><b>الآن:</b> ${esc(a.now||'—')}</div>
+    <ul>${a.tasks.map(t=>`<li class="${t.state}"><span class="dot"></span><span class="t">${esc(t.id)} · ${esc(t.title)} <span class="note">${esc(label[t.state])}${t.note?' — '+esc(t.note):''}</span></span></li>`).join('')}</ul></div>`}).join('');
+  const op=Math.round(done/all*100);$('opct').textContent=op+'%';$('obar').style.width=op+'%';$('ocount').textContent=`${done} من ${all} مهمة تمت`;
+  $('log').innerHTML=(s.log||[]).slice(0,120).map(l=>`<div><span class="ts">${time(l.ts)}</span><span class="who">${esc((s.agents.find(a=>a.id===l.agent)||{}).name||l.agent)}</span>${esc(l.text)}</div>`).join('')||'<div class="empty">لا نشاط بعد</div>';
+  $('msgs').innerHTML=d.messages.map(m=>{const c=m.direction==='claude->antigravity';return `<div><span class="ts">${time(m.ts)}</span><span class="who ${c?'msg-c':'msg-a'}">${c?'Claude ← إلى Antigravity':'Antigravity ← إلى Claude'}</span><span class="note">${esc(m.kind)} · ${esc(m.channel)}${m.model?' · '+esc(m.model):''}</span>${esc(m.text).slice(0,600)}</div>`}).join('')||'<div class="empty">لا مراسلات بعد. ستظهر هنا عند تشغيل الأداة.</div>';
+  $('commits').innerHTML=d.commits.map(c=>`<div><span class="ts">${esc(c.time)}</span><code>${esc(c.hash)}</code> ${esc(c.subject)}</div>`).join('')||'<div class="empty">لا commits بعد</div>';
+  $('fcount').textContent='('+d.files.length+')';$('files').innerHTML=d.files.map(f=>`<div><code>${esc(f)}</code></div>`).join('');
+}
+tick();setInterval(tick,2000);
+</script>
+</body>
+</html>
