@@ -174,6 +174,8 @@ Author: Eslam Elgindy
 
 # العربية — GCSA (Claude Sync Antigravity)
 
+<p align="center"><img src="docs/images/gcsa-poster-ar.png" alt="GCSA: كلود يفكر وأنتيجرافيتي ينفذ" width="520"></p>
+
 **الإصدار 3.5.0 (GCSA v3.5.0)**
 
 > **ملاحظة مهمة:** هذه أداة غير رسمية من تطوير **Eslam Elgindy**. ليست تابعة لشركة Anthropic أو Google، ولا معتمدة منهما أو مدعومة منهما. Claude علامة تجارية مسجلة لشركة Anthropic، وAntigravity علامة تجارية مسجلة لشركة Google.
