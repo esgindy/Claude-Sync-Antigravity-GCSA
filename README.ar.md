@@ -4,7 +4,7 @@
 
 > **ملاحظة مهمة:** هذه أداة غير رسمية من تطوير **Eslam Elgindy**. ليست تابعة لشركة Anthropic أو Google، ولا معتمدة منهما أو مدعومة منهما. Claude علامة تجارية مسجلة لشركة Anthropic، وAntigravity علامة تجارية مسجلة لشركة Google.
 
-النسخة الإنجليزية: [README.md](README.md)
+<p align="center"><a href="README.md"><b>English</b></a> &nbsp;|&nbsp; <b>العربية</b></p>
 
 <p align="center"><img src="docs/images/gcsa-poster-ar.png" alt="GCSA: كلود يفكر وأنتيجرافيتي ينفذ" width="520"></p>
 

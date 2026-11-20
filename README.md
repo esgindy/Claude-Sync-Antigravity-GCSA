@@ -4,9 +4,29 @@
 
 > **Unofficial tool, developed by Eslam Elgindy.** Not affiliated with, endorsed by or sponsored by Anthropic or Google. Claude is a trademark of Anthropic; Antigravity is a trademark of Google.
 
-Arabic version: [README.ar.md](README.ar.md)
+<p align="center"><b>English</b> &nbsp;|&nbsp; <a href="README.ar.md"><b>العربية (اضغط هنا للنسخة العربية الكاملة)</b></a></p>
 
 <p align="center"><img src="docs/images/gcsa-poster-en.png" alt="GCSA: Claude thinks, Antigravity executes" width="520"></p>
+
+<details>
+<summary><b>🇸🇦 ملخص بالعربية (اضغط للعرض) — النسخة الكاملة: <a href="README.ar.md">README.ar.md</a></b></summary>
+
+<div dir="rtl" align="right">
+
+**GCSA (Claude Sync Antigravity)** أداة غير رسمية من تطوير **Eslam Elgindy** تربط Claude وGoogle Antigravity في الاتجاهين: Claude هو العقل الذي يخطط ويراجع، ووكلاء Antigravity هم الذراع التي تنفّذ، فتوفّر توكنات Claude.
+
+**أهم المزايا**
+- نقل تلقائي: Antigravity Desktop أولًا ثم `agy` CLI، مع رسالة خطأ بخطوات الحل إن غابا.
+- اختيار الموديل تلقائيًا حسب حجم المهمة والحصة المتبقية.
+- لوحة تحكم حيّة بـ 8 لغات وثيمات متعددة، وشريط استهلاك لكل موديل.
+- تحديث تلقائي لاستهلاك Claude مع كل مهمة ورسالة (دون قراءة أي توكن أو بيانات اعتماد).
+- سرب وكلاء متوازٍ، واتجاه عكسي (Antigravity يطلب مراجعة Claude).
+- آمن افتراضيًا: قراءة فقط، حظر ملفات الأسرار، موافقة على الأوامر، حد للقفزات.
+
+**الترخيص:** PolyForm Noncommercial 1.0.0 — مجاني للاستخدام غير التجاري، والتجاري يتطلب إذنًا كتابيًا.
+
+</div>
+</details>
 
 ## What it does
 
