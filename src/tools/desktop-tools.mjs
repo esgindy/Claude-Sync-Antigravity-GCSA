@@ -16,6 +16,7 @@ export function register(server) {
       tier: z.enum(['fast', 'balanced', 'deep', 'auto']).optional(),
       kind: z.enum(['read', 'edit']).optional().describe('Default read'),
       timeout_s: z.number().int().positive().optional(),
+      notify_session: z.string().optional().describe('Optional Claude session name to notify on completion or approval request'),
     },
   }, async (args) => {
     try {
@@ -31,6 +32,7 @@ export function register(server) {
         timeout_s: args.timeout_s, conversation: args.conversation_id || undefined,
         allow_non_project: args.allow_non_project,
         target: 'desktop', title: args.title || 'Claude task',
+        notify_session: args.notify_session,
       });
       return json({ ...r, warning: DESKTOP_WARNING, unrestricted: policy.auto_exec });
     } catch (e) { return fail(e.message); }

@@ -1,6 +1,6 @@
 {
   "name": "claude-sync-antigravity",
-  "version": "3.5.0",
+  "version": "4.0.0",
   "description": "GCSA (Claude Sync Antigravity): Unofficial two-way bridge between Claude (Claude Code / Claude Desktop) and Google Antigravity: Claude plans and reviews, Antigravity agents execute.",
   "author": "Eslam Elgindy",
   "license": "PolyForm-Noncommercial-1.0.0",

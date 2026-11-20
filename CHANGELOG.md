@@ -2,6 +2,16 @@
 
 All notable changes to this project are recorded here.
 
+## 4.0.0 (GCSA V4) - 2026-11-20
+
+- **Version bumped to `4.0.0` (GCSA V4)** across `package.json`, `packaging/manifest.json`, `src/servers/claude-side.mjs`, `src/servers/antigravity-side.mjs`, `scripts/push-claude-usage.mjs`, `dashboard/index.html`, `dashboard/status.json`, `README.md`, `README.ar.md`, `docs/INSTALL.md`, `docs/CLAUDE-USAGE.md`, and `CHANGELOG.md`.
+- **GCSA Brand Icon & Favicon in Dashboard**:
+  - Added `dashboard/gcsa-icon.webp` served by `dashboard/server.mjs` at `/logo/gcsa`, `/favicon.ico`, and `/gcsa-icon.webp`.
+  - Displayed the GCSA icon beside the app name in `<header>` (`.brand` / `.brand-ic`) and configured it as the browser `favicon` (`<link rel="icon">` / `<link rel="shortcut icon">`) in `dashboard/index.html`.
+- **Proactive Completion & Approval/Permission Notifications (`src/lib/notifications.mjs`)**:
+  - Every completed job (CLI and Desktop) stamps an exact ISO-8601 `completed_at` timestamp in `result.json`, `agy_wait`/`agy_result`, `agy_list`, `messages.jsonl`, and `<CSA_HOME>/notifications.jsonl` so Claude knows precisely when execution finished.
+  - Whenever an approval or permission request occurs (`needs_approval`, `commands_requested`, `blocked`, or desktop permission prompts), GCSA records an `approval_needed` notification (also exposed via `agy_messages` and `/api/status`) and desktop task instructions (`resultInstruction`) explicitly direct Antigravity to immediately notify/ask the delegating Claude session (via `claude-code` `ListAgents` + `SendMessage` if available, targeting optional `notify_session`) so Claude can grant approval (`agy_approve` or reply) and receive exact completion notifications.
+
 ## 3.5.0 (GCSA v3.5.0) - 2026-11-20
 
 - Project short name standardized to **GCSA** (**Claude Sync Antigravity**) across titles, dashboard header/footer, MCP instructions, and documentation while keeping npm/MCP package names (`claude-sync-antigravity`, `csa-claude`, `csa-antigravity`) unchanged.
@@ -20,8 +30,11 @@ All notable changes to this project are recorded here.
   - Documented optional user wiring to a Claude Code `statusLine` or hook in `docs/INSTALL.md` and `docs/CLAUDE-USAGE.md` without installing anything into `~/.claude`.
 - Dashboard & MCP instructions updates:
   - Added freshness badge/text (`#claudeFreshness`) directly under the Claude icon on the bottom usage strip (`updated N min ago` / `stale` / `unavailable: reason`) plus setup hints in all 8 languages (`ar`, `en`, `zh`, `hi`, `es`, `fr`, `pt`, `ru`), both themes, RTL, and mobile.
-  - `/api/status` now exposes `claude_usage` with `updated_at` and `stale` (while keeping `claudeUsage` for backward compatibility).
+  - `/api/status` now exposes `claude_usage` with `updated_at` and `stale` (while keeping `claudeUsage` for backward compatibility), plus `notifications` (`task_completed` and `approval_needed`).
   - Updated `src/servers/claude-side.mjs` MCP instructions so Claude calls `csa_board` `set_usage` with real numbers at the start of each delegated task.
+- Proactive Completion & Approval/Permission Notifications (`src/lib/notifications.mjs`):
+  - Every completed job (CLI and Desktop) now stamps an exact ISO-8601 `completed_at` timestamp in `result.json`, `agy_wait`/`agy_result`, `agy_list`, `messages.jsonl`, and `<CSA_HOME>/notifications.jsonl` so Claude knows precisely when execution finished.
+  - Whenever an approval or permission request occurs (`needs_approval`, `commands_requested`, `blocked`, or desktop permission prompts), GCSA records an `approval_needed` notification (also returned by `agy_messages` and `/api/status`) and desktop task instructions (`resultInstruction`) explicitly direct Antigravity to notify/ask the delegating Claude session immediately (via `claude-code` `ListAgents` + `SendMessage` if available, targeting optional `notify_session`) so Claude can grant approval (`agy_approve` or reply) and receive the exact `completed_at` completion notice.
 - Bumped version from `3.0.0` to `3.5.0` across `package.json`, `packaging/manifest.json`, `src/servers/claude-side.mjs`, `src/servers/antigravity-side.mjs`, `README.md`, `README.ar.md`, and `CHANGELOG.md`, and added `CHANGES-v3.5.md` and `test/v35-claude-usage.test.mjs`.
 
 ## 3.0.0 (v3) - 2026-11-20

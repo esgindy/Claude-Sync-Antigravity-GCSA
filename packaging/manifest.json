@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "claude-sync-antigravity",
   "display_name": "GCSA (Claude Sync Antigravity)",
-  "version": "3.5.0",
+  "version": "4.0.0",
   "description": "GCSA (Claude Sync Antigravity): Unofficial bridge where Claude plans and reviews, Antigravity agents execute. Not affiliated with Anthropic or Google.",
   "author": {
     "name": "Eslam Elgindy"

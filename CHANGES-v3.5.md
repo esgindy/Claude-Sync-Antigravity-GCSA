@@ -40,10 +40,11 @@
 
 ### ملفات مضافة (جديدة)
 1. `src/lib/claude-usage.mjs` — وحدة التحديث التلقائي لاستهلاك Claude Code (`refreshClaudeUsage`, `readCurrentClaudeUsage`, `writeClaudeUsageSnapshot`, `validateAndClampUsage`, `clampUsagePct`, `sanitizeUsageText`, `resetClaudeUsageThrottle`) مع Throttle كل 20 ثانية، وترتيب المصادر `(a) -> (b) -> (c) -> unavailable`، وحماية صارمة تمنع تمرير أي ملفات اعتماد أو أسرار.
-2. `scripts/push-claude-usage.mjs` — أداة CLI (`--five-hour`, `--weekly`, `--resets-at`, `--note`, `--json`) تتحقق من القيم وتحصرها بين `0` و`100` وتكتب `<CSA_HOME>/claude-usage.json` و`status.json` ذريًا.
-3. `docs/CLAUDE-USAGE.md` — دليل توثيقي لكيفية عمل التحديث التلقائي وكيفية ربط `scripts/push-claude-usage.mjs` أو `claude_usage_command` اختياريًا بـ `statusLine` أو Hook في Claude Code دون أي تعديل تلقائي لملفات `~/.claude`.
-4. `test/v35-claude-usage.test.mjs` — حزمة اختبارات شاملة للإصدار 3.5.0 (الـ Throttle، أولوية المصادر، وسم `stale`، الكتابة الذرية، حصر القيم `0-100`، عدم رمي استثناءات عند فشل المصادر أو انتهاء المهلة 5 ثوانٍ، منع قراءة ملفات الاعتماد، والتحديث التلقائي مع `/api/status` واللغات الثماني).
-5. `CHANGES-v3.5.md` — هذا الملف التوثيقي للإصدار 3.5.0.
+2. `src/lib/notifications.mjs` — وحدة الإشعارات الاستباقية لـ Claude (`recordNotification`, `readNotifications`, `formatApprovalNotice`, `formatCompletionNotice`) في `<CSA_HOME>/notifications.jsonl` لتسجيل طلبات الموافقة/الصلاحيات (`approval_needed`) وتوقيت انتهاء كل مهمة بدقة (`completed_at`, `task_completed`).
+3. `scripts/push-claude-usage.mjs` — أداة CLI (`--five-hour`, `--weekly`, `--resets-at`, `--note`, `--json`) تتحقق من القيم وتحصرها بين `0` و`100` وتكتب `<CSA_HOME>/claude-usage.json` و`status.json` ذريًا.
+4. `docs/CLAUDE-USAGE.md` — دليل توثيقي لكيفية عمل التحديث التلقائي وكيفية ربط `scripts/push-claude-usage.mjs` أو `claude_usage_command` اختياريًا بـ `statusLine` أو Hook في Claude Code دون أي تعديل تلقائي لملفات `~/.claude`.
+5. `test/v35-claude-usage.test.mjs` — حزمة اختبارات شاملة للإصدار 3.5.0 (الـ Throttle، أولوية المصادر، وسم `stale`، الكتابة الذرية، حصر القيم `0-100`، عدم رمي استثناءات عند فشل المصادر أو انتهاء المهلة 5 ثوانٍ، منع قراءة ملفات الاعتماد، التحديث التلقائي مع `/api/status` واللغات الثماني، وبروتوكول إشعارات الموافقة وتوقيت الانتهاء الدقيق `completed_at`).
+6. `CHANGES-v3.5.md` — هذا الملف التوثيقي للإصدار 3.5.0.
 
 ### ملفات معدّلة
 6. `config.default.json` — إضافة `"claude_usage_max_age_s": 600` و`"claude_usage_command": null`.
@@ -65,10 +66,11 @@
 22. `README.md` — تحديث التوثيق الإنجليزي إلى `GCSA — Claude Sync Antigravity` الإصدار `3.5.0`.
 23. `README.ar.md` — تحديث التوثيق العربي إلى `GCSA — Claude Sync Antigravity` الإصدار `3.5.0`.
 24. `CHANGELOG.md` — إضافة قسم `## 3.5.0 (GCSA v3.5.0) - 2026-11-20`.
+25. `src/lib/desktop-job.mjs` + `src/tools/core-tools.mjs` + `src/tools/desktop-tools.mjs` — إضافة بروتوكول إشعارات الموافقة/الصلاحيات وتوقيت الانتهاء الدقيق (`completed_at`) ودعم المعامل الاختياري `notify_session` وإرجاع `notifications` في `agy_messages`.
 
 ---
 
 ## 4. نتائج الاختبارات (`test/`)
 
 - **إجمالي الاختبارات (`node --test --test-concurrency=1 "test/*.test.mjs"`)**:
-  - جميع الاختبارات السابقة (**125 اختبارًا**) + اختبارات v3.5.0 الجديدة (**8 مجموعات اختبارات في `test/v35-claude-usage.test.mjs`**) = **133/133 نجاح (`133 pass, 0 fail`)**.
+  - جميع الاختبارات السابقة (**125 اختبارًا**) + اختبارات v3.5.0 الجديدة (**9 مجموعات اختبارات في `test/v35-claude-usage.test.mjs`**) = **134/134 نجاح (`134 pass, 0 fail`)**.

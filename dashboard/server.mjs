@@ -15,6 +15,7 @@ import { listModels } from '../src/lib/models.mjs';
 import { getQuota, summarizeStatus } from '../src/lib/quota.mjs';
 import { probeCli } from '../src/lib/agy.mjs';
 import { refreshClaudeUsage, readCurrentClaudeUsage } from '../src/lib/claude-usage.mjs';
+import { readNotifications } from '../src/lib/notifications.mjs';
 
 const repoRoot = path.resolve(here, '..');
 const argPort = (() => {
@@ -87,6 +88,7 @@ function jobAgents() {
       fallback_reason: job.fallback_reason ? redact(job.fallback_reason) : null,
       read_only_violation: Boolean(result?.read_only_violation),
       read_only_warning: result?.read_only_warning ? redact(result.read_only_warning) : null,
+      completed_at: result?.completed_at || job.ended || null,
     }, job.state === 'running' || job.state === 'queued', Date.parse(job.created) || 0);
   }
   for (const { job, result, title } of readJobs('claude-jobs')) {
@@ -116,6 +118,7 @@ function jobAgents() {
       fallback_reason: job.fallback_reason ? redact(job.fallback_reason) : null,
       read_only_violation: Boolean(result?.read_only_violation),
       read_only_warning: result?.read_only_warning ? redact(result.read_only_warning) : null,
+      completed_at: result?.completed_at || job.ended || null,
     }, job.state === 'running' || job.state === 'queued', Date.parse(job.created) || 0);
   }
   return [...agents.values()].sort((a, b) => b.last - a.last).slice(0, 30).map((a) => ({ ...a, tasks: a.tasks.slice(0, 25) }));
@@ -499,6 +502,7 @@ async function apiStatus() {
     jobAgents: jobAgents(),
     commits: commits(root),
     messages: messages(),
+    notifications: readNotifications({ limit: 30 }),
     files: files(root),
     transportState: readTransportState(),
     security: readSecurity(cfg),
@@ -518,7 +522,8 @@ http.createServer(async (req, res) => {
   res.setHeader('x-frame-options', 'DENY');
   res.setHeader('content-security-policy', "default-src 'self'; img-src 'self' data:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'");
   const url = String(req.url || '/');
-  if (url.startsWith('/api/status')) {
+  const pathname = url.split('?')[0];
+  if (pathname === '/api/status') {
     try {
       const payload = await apiStatus();
       res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -528,7 +533,14 @@ http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ error: redact(String(e?.message || e)) }));
     }
   }
-  const m = /^\/logo\/(claude|antigravity)$/.exec(url);
+  if (pathname === '/logo/gcsa' || pathname === '/favicon.ico' || pathname === '/gcsa-icon.webp') {
+    let iconBuf = null;
+    try { iconBuf = fs.readFileSync(path.join(here, 'gcsa-icon.webp')); } catch { iconBuf = null; }
+    if (!iconBuf) { res.writeHead(404); return res.end(); }
+    res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'max-age=3600' });
+    return res.end(iconBuf);
+  }
+  const m = /^\/logo\/(claude|antigravity)$/.exec(pathname);
   if (m) {
     const img = logo(m[1]);
     if (!img) { res.writeHead(404); return res.end(); }

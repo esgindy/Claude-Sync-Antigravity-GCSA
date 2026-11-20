@@ -4,7 +4,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
-const VERSION = '3.5.0';
+const VERSION = '4.0.0';
 
 const INSTRUCTIONS = `GCSA (Claude Sync Antigravity): you are the brain, Antigravity agents are the muscle.
 Delegate bulky execution (reading many files, research, drafting, routine edits, tests) to Antigravity to save your own tokens; keep planning, judgement and final review for yourself.
@@ -12,8 +12,8 @@ Flow: agy_task -> agy_wait (repeat while "running") -> review the result yoursel
 Model choice: leave tier "auto" (simple -> fast, normal -> balanced, hard -> deep, with quota-aware fallback) or pass tier/model explicitly. agy_models lists every model with its remaining quota; agy_usage shows tokens used and remaining quota.
 Target choice: agy_task defaults target to "auto" (automatically selects an available transport: cli or desktop); pass target="cli" or "desktop" to force one. Use agy_desktop_task when the user wants to watch the work inside the Antigravity app (it runs with the app's own permissions). Use agy_swarm to run several agents in parallel (split a task, or compare models).
 kind "read" (default) cannot change files. kind "edit" may edit files in cwd; check files_changed yourself.
-Permissions: headless agy cannot ask. When status is "needs_approval", read commands_requested; approve routine, project-local commands with agy_approve; ask the user first for anything that deletes, publishes, touches live systems or sends data out.
-Every message in both directions is logged; agy_messages shows the log.
+Permissions & Notifications: headless agy cannot ask interactively, and desktop agents are instructed to notify you immediately (with exact completed_at timestamp on completion, or when needing approval/permission). When status is "needs_approval" or an approval notification arrives, read commands_requested; approve routine, project-local commands with agy_approve; ask the user first for anything that deletes, publishes, touches live systems or sends data out. Pass notify_session if you want desktop agents to address your session directly.
+Every message and completion/approval notification in both directions is logged; agy_messages shows both messages and notifications (including exact completed_at timestamps).
 Dashboard: a live dashboard opens automatically when a project starts delegating (csa_dashboard opens it again). At the start of a project, use csa_board to set the project name and register your plan: "gindy" is the manager/supervisor (you); add every Claude-side subagent you start (add_agent + add_task) and keep task states current (set_task). At the start of each delegated task, call csa_board with action="set_usage" (five_hour_remaining_pct, weekly_remaining_pct, resets_at, note) using your real Claude Code usage numbers whenever known so the live dashboard usage strip and <CSA_HOME>/claude-usage.json stay fresh — never invent numbers or store secrets. Antigravity jobs and Claude review jobs appear on the board automatically.`;
 
 const server = new McpServer({ name: 'claude-sync-antigravity', version: VERSION }, { instructions: INSTRUCTIONS });

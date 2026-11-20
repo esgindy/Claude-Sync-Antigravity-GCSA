@@ -14,10 +14,11 @@ const INSTRUCTIONS = [
   'Call claude_review after you finish a meaningful change (several files, risky logic, anything touching auth, data or money). Pass the original goal, your summary and the files changed. If the verdict is "changes", apply required_changes and ask for review again only if the change was substantial.',
   'Call claude_task to hand over work that needs careful reasoning, a security audit or a deep review, rather than doing it yourself. Default is read-only; set allow_edits true only when Claude should edit files (it never runs shell commands).',
   'Both calls start a background job and return job_id. Use claude_wait (up to 50 s per call, repeat while state is running), then claude_result for the full answer.',
+  'APPROVAL & COMPLETION NOTIFICATIONS: Whenever you encounter a permission/approval prompt during a delegated task, notify Claude immediately with the job_id and requested command/permission so Claude can review and grant approval (via agy_approve or reply). Upon finishing any delegated task, always include the exact ISO-8601 completed_at timestamp in agent_result.json and notify Claude immediately so Claude knows the exact moment you finished.',
   'HOP LIMIT: every call returns chain_id and hop. Pass the same chain_id on follow-up calls in one piece of work. When a call is refused because the hop limit was reached, stop and report to the user; do not retry or start a new chain to get around it.',
 ].join('\n');
 
-const server = new McpServer({ name: 'csa-antigravity', version: '3.5.0' }, { instructions: INSTRUCTIONS });
+const server = new McpServer({ name: 'csa-antigravity', version: '4.0.0' }, { instructions: INSTRUCTIONS });
 
 const text = (obj) => ({ content: [{ type: 'text', text: typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2) }] });
 const err = (msg) => ({ isError: true, content: [{ type: 'text', text: String(msg) }] });

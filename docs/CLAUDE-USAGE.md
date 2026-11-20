@@ -1,6 +1,6 @@
-# Automatic Claude Code Usage Refresh — GCSA v3.5.0
+# Automatic Claude Code Usage Refresh — GCSA V4 (4.0.0)
 
-GCSA (Claude Sync Antigravity) v3.5.0 automatically refreshes the Claude Code usage section on the live dashboard's bottom usage strip (`src/lib/claude-usage.mjs`).
+GCSA (Claude Sync Antigravity) v4.0.0 automatically refreshes the Claude Code usage section on the live dashboard's bottom usage strip (`src/lib/claude-usage.mjs`).
 
 ## 1. What Is Automatic vs. What Needs a Source
 

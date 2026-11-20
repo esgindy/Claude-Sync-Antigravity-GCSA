@@ -1,11 +1,15 @@
 <!doctype html>
 <html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GCSA · Claude Sync Antigravity</title>
+<title>GCSA · Claude Sync Antigravity v4</title>
+<link rel="icon" type="image/webp" href="/logo/gcsa?v=4">
+<link rel="shortcut icon" type="image/webp" href="/logo/gcsa?v=4">
 <style>
 :root{--bg:#070912;--card:#121624;--ink:#e9ecf3;--muted:#8d95a6;--line:#262c3a;--claude:#d97757;--agy:#3d8bff;--ok:#2fbf71;--warn:#f1b84b;--bad:#e5534b}
 :root.light{--bg:#f4f6fb;--card:#ffffff;--ink:#16181d;--muted:#5d6575;--line:#e1e5ee}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Segoe UI",Tahoma,sans-serif}
 header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 22px}h1{font-size:19px;margin:0}.sub{color:var(--muted);font-size:12.5px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand-ic{width:42px;height:42px;border-radius:11px;object-fit:cover;flex:none;box-shadow:0 2px 12px #0006;border:1px solid var(--line)}
 .ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 select,.btn{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font:inherit;cursor:pointer}
 .wrap{max-width:1360px;margin:auto;padding:0 18px 8px}
@@ -93,7 +97,7 @@ code{direction:ltr;unicode-bidi:embed;font-size:12px}
 .m-stats{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:4px}
 footer{text-align:center;color:var(--muted);font-size:12.5px;padding:18px}footer a{color:#5f9bff;text-decoration:none}footer a:hover{text-decoration:underline}
 </style></head><body>
-<header><div><h1 id="title">GCSA · Claude Sync Antigravity</h1><div class="sub" id="subtitle"></div></div>
+<header><div class="brand"><img src="/logo/gcsa?v=4" alt="GCSA" class="brand-ic"><div><h1 id="title">GCSA · Claude Sync Antigravity</h1><div class="sub" id="subtitle"></div></div></div>
 <div class="ctl"><span class="sub" id="clock"></span>
 <button id="theme" class="btn" aria-label="theme">☀️</button>
 <select id="avstyle" aria-label="avatars"><option value="char">🤖</option><option value="pixel">👾</option><option value="simple">🦊</option></select>
@@ -124,7 +128,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:18px}footer
 </div>
 </section>
 </div>
-<footer>© 2026 <a href="https://github.com/esgindy" target="_blank" rel="noopener">Eslam Elgindy</a> · GCSA (Claude Sync Antigravity) v3.5.0</footer>
+<footer>© 2026 <a href="https://github.com/esgindy" target="_blank" rel="noopener">Eslam Elgindy</a> · GCSA (Claude Sync Antigravity) v4.0.0 (V4)</footer>
 <script>
 const L={
 ar:{dir:'rtl',sub:'لوحة متابعة حية',brain:'المخ · يخطط ويراجع',muscle:'العضلات · تنفّذ',msgs:'المراسلات',log:'سجل النشاط',files:'ملفات المشروع',commits:'الـ Commits',working:'يعمل',idle:'خامل',finished:'أنهى عمله',wait:'في انتظار أول أمر…',toA:'Claude ← إلى Antigravity',toC:'Antigravity ← إلى Claude',chief:'المدير والمشرف العام',noMsgs:'لا مراسلات بعد',noLog:'لا نشاط بعد',noAgents:'لا وكلاء بعد. سيظهرون هنا مع أول مهمة.',agents:'وكلاء',active:'نشط',tasks:'مهام',doneN:'تمت',offline:'لا اتصال بالخادم',

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Atomically writes <CSA_HOME>/claude-usage.json (and updates status.json) for GCSA v3.5.0.
+// Atomically writes <CSA_HOME>/claude-usage.json (and updates status.json) for GCSA v4.0.0 (V4).
 // Usage:
 //   node scripts/push-claude-usage.mjs --five-hour <0-100> [--weekly <0-100>] [--resets-at "<ISO-or-text>"] [--note "<text>"]
 // Security: NEVER reads credentials, OAuth tokens, .credentials.json, cookies, or ~/.claude settings.
@@ -9,7 +9,7 @@ const args = process.argv.slice(2);
 
 function printHelp() {
   console.log([
-    'GCSA (Claude Sync Antigravity) v3.5.0 — push-claude-usage',
+    'GCSA (Claude Sync Antigravity) v4.0.0 (V4) — push-claude-usage',
     'Usage:',
     '  node scripts/push-claude-usage.mjs --five-hour <pct> [--weekly <pct>] [--resets-at "<time>"] [--note "<text>"]',
     '',

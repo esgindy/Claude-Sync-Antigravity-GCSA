@@ -8,6 +8,7 @@ import { listModels } from '../lib/models.mjs';
 import { getQuota, quotaById } from '../lib/quota.mjs';
 import { usageReport } from '../lib/usage.mjs';
 import { readMessages, logMessage } from '../lib/messages.mjs';
+import { readNotifications } from '../lib/notifications.mjs';
 import { runProcess } from '../lib/agy.mjs';
 import { redact, childEnv, resolveSafe, isInside } from '../lib/safety.mjs';
 import { writeJson } from '../lib/store.mjs';
@@ -124,6 +125,7 @@ export function register(server) {
         allow_non_project: z.boolean().optional().describe('Set true to allow opening a new Desktop conversation in Non-Project when cwd is not bound to an Antigravity project.'),
         target: z.enum(['auto', 'cli', 'desktop']).optional().describe('Execution target: auto (default: desktop if available, else cli), cli, or desktop.'),
         title: z.string().optional(),
+        notify_session: z.string().optional().describe('Optional Claude session name to notify on completion (with exact completed_at) or approval/permission request.'),
       },
     },
     guard(async (a) => {
@@ -153,6 +155,7 @@ export function register(server) {
         allow_non_project: a.allow_non_project,
         target: a.target || inheritedTarget,
         title: a.title,
+        notify_session: a.notify_session,
         chain_id,
         hop,
       });
@@ -217,6 +220,7 @@ export function register(server) {
         title: j.title,
         created: j.created,
         ended: j.ended,
+        completed_at: j.ended || null,
         terminal: TERMINAL.has(j.state),
       })),
     })),
@@ -263,6 +267,9 @@ export function register(server) {
       description: 'Read the message log between Claude and Antigravity.',
       inputSchema: { limit: z.number().int().min(1).max(500).default(30), since: z.string().optional().describe('ISO timestamp') },
     },
-    guard(({ limit, since }) => ({ messages: readMessages({ limit: limit ?? 30, since }) })),
+    guard(({ limit, since }) => ({
+      messages: readMessages({ limit: limit ?? 30, since }),
+      notifications: readNotifications({ limit: Math.min(limit ?? 30, 50), since }),
+    })),
   );
 }

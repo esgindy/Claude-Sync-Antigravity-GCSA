@@ -1,6 +1,6 @@
 # Installation — GCSA (Claude Sync Antigravity)
 
-GCSA (Claude Sync Antigravity) 3.5.0. Unofficial tool by Eslam Elgindy, not affiliated with Anthropic or Google.
+GCSA (Claude Sync Antigravity) 4.0.0 (V4). Unofficial tool by Eslam Elgindy, not affiliated with Anthropic or Google.
 
 ## Before you start
 
@@ -46,7 +46,7 @@ You have two options.
    ```
 2. Pack the extension. Verify the exact CLI flags first with `npx @anthropic-ai/mcpb --help`, then run:
    ```powershell
-   npx @anthropic-ai/mcpb pack dist/csa dist/claude-sync-antigravity-3.5.0.mcpb
+   npx @anthropic-ai/mcpb pack dist/csa dist/claude-sync-antigravity-4.0.0.mcpb
    ```
 3. Open the `.mcpb` file with Claude Desktop, or install it from Claude Desktop's extension settings. The exact menu names depend on your Claude Desktop version. Verify them in the app.
 

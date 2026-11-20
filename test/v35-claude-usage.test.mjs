@@ -34,6 +34,9 @@ const claudeUsage = await import('../src/lib/claude-usage.mjs');
 const dashboard = await import('../src/lib/dashboard.mjs');
 const messages = await import('../src/lib/messages.mjs');
 const store = await import('../src/lib/store.mjs');
+const desktopJob = await import('../src/lib/desktop-job.mjs');
+const jobsApi = await import('../src/lib/jobs-api.mjs');
+const notifications = await import('../src/lib/notifications.mjs');
 
 let dashServer = null;
 
@@ -66,7 +69,7 @@ after(() => {
   try { fs.rmSync(work, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); } catch { /* ignore */ }
 });
 
-test('1. version 3.5.0 bump, config defaults, and claude-side instructions', () => {
+test('1. version 4.0.0 (V4) bump, config defaults, and claude-side instructions', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
   const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, 'packaging', 'manifest.json'), 'utf8'));
   const defCfg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'config.default.json'), 'utf8'));
@@ -74,18 +77,18 @@ test('1. version 3.5.0 bump, config defaults, and claude-side instructions', () 
   const agySide = fs.readFileSync(path.join(repoRoot, 'src', 'servers', 'antigravity-side.mjs'), 'utf8');
 
   assert.equal(pkg.name, 'claude-sync-antigravity');
-  assert.equal(pkg.version, '3.5.0');
+  assert.equal(pkg.version, '4.0.0');
   assert.equal(manifest.name, 'claude-sync-antigravity');
-  assert.equal(manifest.version, '3.5.0');
+  assert.equal(manifest.version, '4.0.0');
   assert.equal(defCfg.claude_usage_max_age_s, 600);
   assert.equal(defCfg.claude_usage_command, null);
   assert.equal(defCfg.allow_desktop_auto_exec, false);
   assert.equal(defCfg.allow_desktop_edit, false);
 
-  assert.match(claudeSide, /VERSION = '3\.5\.0'/);
+  assert.match(claudeSide, /VERSION = '4\.0\.0'/);
   assert.match(claudeSide, /GCSA/);
   assert.match(claudeSide, /At the start of each delegated task, call csa_board with action="set_usage"/);
-  assert.match(agySide, /version: '3\.5\.0'/);
+  assert.match(agySide, /version: '4\.0\.0'/);
 });
 
 test('2. clampUsagePct & validateAndClampUsage validate, clamp 0-100, and redact secrets', () => {
@@ -466,7 +469,78 @@ test('8. automatic triggers on message log, job start/state change, and dashboar
   assert.equal(htmlRes.code, 200);
   assert.ok(htmlRes.body.includes('id="claudeFreshness"'), 'expected #claudeFreshness element under Claude icon');
   assert.ok(htmlRes.body.includes('GCSA'), 'expected GCSA short name in dashboard HTML');
+  assert.ok(htmlRes.body.includes('rel="icon"'), 'expected favicon link in dashboard HTML');
+  assert.ok(htmlRes.body.includes('href="/logo/gcsa'), 'expected GCSA favicon URL');
+  assert.ok(htmlRes.body.includes('class="brand-ic"'), 'expected GCSA brand icon beside title in header');
+  assert.ok(htmlRes.body.includes('v4.0.0'), 'expected v4.0.0 in dashboard HTML');
+
+  const logoRes = await httpGet(port, '/logo/gcsa');
+  assert.equal(logoRes.code, 200);
+  assert.ok(logoRes.body.length > 1000, 'expected GCSA icon bytes from /logo/gcsa');
+  const favRes = await httpGet(port, '/favicon.ico');
+  assert.equal(favRes.code, 200);
+  assert.ok(favRes.body.length > 1000, 'expected GCSA favicon bytes from /favicon.ico');
+
   for (const key of ['updatedMinAgo:', 'stale:', 'unavailNoData:', 'usageHint:']) {
     assert.equal(htmlRes.body.split(key).length - 1, 8, `expected ${key} in all 8 languages`);
   }
+});
+
+test('9. approval/permission & exact completion timestamp notifications (notifications.mjs, desktop-job.mjs, runner.mjs)', async () => {
+  // 9a. resultInstruction embeds both approval-request protocol, exact completed_at, and notify_session
+  const instr = desktopJob.resultInstruction(path.join(tmp, 'agent_result.json'), {
+    id: '20261120075000-abcdef',
+    notify_session: 'Claude Main [a1b2c3]',
+  });
+  assert.match(instr, /CLAUDE APPROVAL & COMPLETION NOTIFICATION PROTOCOL/);
+  assert.match(instr, /needs_approval/);
+  assert.match(instr, /completed_at/);
+  assert.match(instr, /Claude Main \[a1b2c3\]/);
+  assert.match(instr, /SendMessage/);
+
+  // 9b. fromAgentResult preserves valid completed_at and defaults to ISO-8601 when absent
+  const explicitTs = '2026-11-20T07:50:12.000Z';
+  const r1 = desktopJob.fromAgentResult({ job_id: 'j1' }, { status: 'done', completed_at: explicitTs, summary: 'ok' });
+  assert.equal(r1.completed_at, explicitTs);
+  const r2 = desktopJob.fromAgentResult({ job_id: 'j2' }, { status: 'needs_approval', summary: 'need perm' });
+  assert.ok(!Number.isNaN(Date.parse(r2.completed_at)));
+
+  // 9c. End-to-end CLI job requiring command approval records approval_needed notification + completed_at
+  const startedApproval = await jobsApi.startJob({
+    prompt: 'SCENARIO:commands run check',
+    cwd: work,
+    kind: 'read',
+    target: 'cli',
+    notify_session: 'Claude Review',
+  });
+  const waitedApproval = await jobsApi.waitJob(startedApproval.job_id, 30);
+  assert.equal(waitedApproval.status, 'needs_approval');
+  assert.ok(waitedApproval.completed_at && !Number.isNaN(Date.parse(waitedApproval.completed_at)));
+
+  const notesAfterApproval = notifications.readNotifications({ limit: 20 });
+  const appNote = notesAfterApproval.find((n) => n.job_id === startedApproval.job_id);
+  assert.ok(appNote, 'expected approval notification in notifications.jsonl');
+  assert.equal(appNote.type, 'approval_needed');
+  assert.equal(appNote.status, 'needs_approval');
+  assert.equal(appNote.target_session, 'Claude Review');
+  assert.equal(appNote.completed_at, waitedApproval.completed_at);
+  assert.ok(appNote.commands_requested.length >= 1);
+  assert.match(appNote.message, /Approval\/Permission Request/);
+
+  // 9d. End-to-end normal CLI job records task_completed notification with exact completed_at
+  const startedDone = await jobsApi.startJob({
+    prompt: 'simple read task',
+    cwd: work,
+    kind: 'read',
+    target: 'cli',
+  });
+  const waitedDone = await jobsApi.waitJob(startedDone.job_id, 30);
+  assert.equal(waitedDone.status, 'done');
+  assert.ok(waitedDone.completed_at && !Number.isNaN(Date.parse(waitedDone.completed_at)));
+
+  const doneNote = notifications.readNotifications({ limit: 20 }).find((n) => n.job_id === startedDone.job_id);
+  assert.ok(doneNote, 'expected completion notification in notifications.jsonl');
+  assert.equal(doneNote.type, 'task_completed');
+  assert.equal(doneNote.completed_at, waitedDone.completed_at);
+  assert.match(doneNote.message, /Task Finished/);
 });
