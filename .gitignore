@@ -3,3 +3,5 @@ node_modules/
 dist/
 *.mcpb
 dashboard/status.json.*.tmp
+dashboard/status.json
+.claude/
