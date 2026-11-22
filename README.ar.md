@@ -2,6 +2,10 @@
 
 **الإصدار 5.0.0 (GCSA V5)**
 
+<p align="center"><img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&logoColor=white"> <img alt="macOS" src="https://img.shields.io/badge/macOS-supported-000000?logo=apple&logoColor=white"> <img alt="Linux" src="https://img.shields.io/badge/Linux-best--effort-FCC624?logo=linux&logoColor=black"></p>
+
+> **الجديد في V5: الأداة تعمل الآن على Windows وmacOS.** كود واحد تمت تجربته على تثبيت حقيقي على Windows وmacOS. تكتشف الأداة نظام التشغيل تلقائياً، وأمر واحد (`node scripts/setup.mjs`) يثبّت ويسجّل كل شيء. دعم Linux تجريبي.
+
 > **ملاحظة مهمة:** هذه أداة غير رسمية من تطوير **Eslam Elgindy**. ليست تابعة لشركة Anthropic أو Google، ولا معتمدة منهما أو مدعومة منهما. Claude علامة تجارية مسجلة لشركة Anthropic، وAntigravity علامة تجارية مسجلة لشركة Google.
 
 <p align="center"><a href="README.md"><b>English</b></a> &nbsp;|&nbsp; <b>العربية</b></p>
@@ -180,7 +184,7 @@ npm run dashboard
 - قراءة ردود وضع Desktop تعتمد على ملف نتيجة يُطلب من الوكيل كتابته. إذا لم يكتبه الوكيل، لا يمكن قراءة الرد.
 - معلومات الحصة تحتاج إلى أن يكون تطبيق Antigravity مفتوحاً. والنماذج التي لا توفر نسبة حصة (مثل `Gemini 4 Carbon`) تعرض `غير متاح`.
 - لأن Claude Code CLI لا يوفر نقطة نهاية محلية غير مصادق عليها لقراءة الحصة، ولأن GCSA لا يقرأ أبداً ملفات الاعتماد أو رموز OAuth أو ملفات تعريف الارتباط، يتم تحديث حصة Claude Code في الشريط السفلي للوحة تلقائياً من `<CSA_HOME>/claude-usage.json` (المكتوب عبر `csa_board` `set_usage` أو `scripts/push-claude-usage.mjs`)، أو من `claude_usage_command` الاختياري، أو من آخر قيمة `set_usage` (موسومة كـ `stale`)؛ وإلا تعرض `غير متاح` مع السبب وتلميحة إعداد قصيرة (راجع [docs/CLAUDE-USAGE.md](docs/CLAUDE-USAGE.md)).
-- من V5 تعمل الأداة على Windows وmacOS (وLinux بشكل تجريبي). قد تختلف تفاصيل Antigravity الداخلية بين الأنظمة.
+- من V5 تعمل الأداة على Windows وmacOS وتمت تجربتها عليهما (وLinux بشكل تجريبي). قد تختلف تفاصيل Antigravity الداخلية بين الأنظمة.
 
 ## قواعد الأمان كاملة
 

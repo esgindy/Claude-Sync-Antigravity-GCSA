@@ -2,7 +2,7 @@
 
 All notable changes to this project are recorded here.
 
-## 5.0.0 (GCSA V5) - cross-platform
+## 5.0.0 (GCSA V5) - 2026-11-22 - cross-platform (Windows + macOS)
 
 - **One codebase for Windows and macOS (Linux best-effort).** The OS is detected at runtime; nothing is tied to one machine.
 - New `src/lib/platform.mjs` holds every OS difference: state folder (`%LOCALAPPDATA%` / `~/Library/Application Support` / `~/.local/share`), `agy` and `claude` lookup (no `.exe` suffix handling off Windows), Antigravity `language_server` location, shell for approved commands (PowerShell / zsh / sh), opening the dashboard (`rundll32` / `open` / `xdg-open`), process-tree kill (`taskkill` / process group), and the Antigravity hub scan (PowerShell CIM / `ps` + `lsof`).
