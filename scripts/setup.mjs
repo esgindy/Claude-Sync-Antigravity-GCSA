@@ -346,6 +346,7 @@ async function main() {
     const r = applyStatusLine(statusLinePlan(), { dryRun: opts.dryRun, remove: opts.uninstall, stamp });
     if (r.status === 'skipped') say('warn', `statusLine: skipped — ${r.reason}`);
     else {
+      if (['added', 'updated', 'chained', 'removed', 'restored'].includes(r.status)) changed++;
       const what = {
         added: 'added', updated: 'updated', unchanged: 'already set', absent: 'not set by GCSA (left alone)',
         removed: 'removed', restored: 'removed; your previous statusLine was restored',
