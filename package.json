@@ -1,0 +1,39 @@
+{
+  "name": "claude-sync-antigravity",
+  "version": "5.0.0",
+  "description": "GCSA (Claude Sync Antigravity): Unofficial two-way bridge between Claude (Claude Code / Claude Desktop) and Google Antigravity: Claude plans and reviews, Antigravity agents execute.",
+  "author": "Eslam Elgindy",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "type": "module",
+  "bin": {
+    "csa-claude": "src/servers/claude-side.mjs",
+    "csa-antigravity": "src/servers/antigravity-side.mjs"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "setup:check": "node scripts/setup.mjs --dry-run",
+    "uninstall-mcp": "node scripts/setup.mjs --uninstall",
+    "test": "node --test --test-concurrency=1 \"test/*.test.mjs\"",
+    "dashboard": "node dashboard/server.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "os": [
+    "win32",
+    "darwin",
+    "linux"
+  ],
+  "keywords": [
+    "mcp",
+    "claude",
+    "antigravity",
+    "agy",
+    "agents",
+    "bridge"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  }
+}

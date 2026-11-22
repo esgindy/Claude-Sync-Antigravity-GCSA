@@ -1,0 +1,40 @@
+{
+  "manifest_version": "0.3",
+  "name": "claude-sync-antigravity",
+  "display_name": "GCSA (Claude Sync Antigravity)",
+  "version": "5.0.0",
+  "description": "GCSA (Claude Sync Antigravity): Unofficial bridge where Claude plans and reviews, Antigravity agents execute. Not affiliated with Anthropic or Google.",
+  "author": {
+    "name": "Eslam Elgindy"
+  },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "server": {
+    "type": "node",
+    "entry_point": "src/servers/claude-side.mjs",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/src/servers/claude-side.mjs"]
+    }
+  },
+  "compatibility": {
+    "platforms": ["win32", "darwin", "linux"],
+    "runtimes": {
+      "node": ">=20.0.0"
+    }
+  },
+  "tools": [
+    { "name": "agy_task", "description": "Start a task on Antigravity (read or edit)." },
+    { "name": "agy_wait", "description": "Wait for a running task to finish." },
+    { "name": "agy_result", "description": "Read the result of a finished task." },
+    { "name": "agy_approve", "description": "Run approved commands requested by Antigravity and continue the task." },
+    { "name": "agy_cancel", "description": "Cancel a running task." },
+    { "name": "agy_list", "description": "List recent tasks." },
+    { "name": "agy_models", "description": "List available models, remaining quota and tier." },
+    { "name": "agy_usage", "description": "Show the usage report and quota." },
+    { "name": "agy_messages", "description": "Show the message log." },
+    { "name": "agy_desktop_task", "description": "Start a task inside the Antigravity desktop app." },
+    { "name": "agy_desktop_status", "description": "Check a desktop task." },
+    { "name": "agy_swarm", "description": "Start a parallel run (split or compare)." },
+    { "name": "agy_swarm_status", "description": "Check a swarm run." }
+  ]
+}

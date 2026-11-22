@@ -1,0 +1,7 @@
+node_modules/
+*.tmp
+dist/
+*.mcpb
+dashboard/status.json.*.tmp
+dashboard/status.json
+.claude/

@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "csa": {
+      "command": "node",
+      "args": [
+        "/path/to/Claude-Sync-Antigravity/src/servers/claude-side.mjs"
+      ]
+    }
+  }
+}
