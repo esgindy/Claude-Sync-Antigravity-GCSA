@@ -17,6 +17,8 @@ All notable changes to this project are recorded here.
 - **Automatic Claude usage on the dashboard:** setup sets a Claude Code statusLine (`scripts/claude-statusline.mjs`) that turns Claude Code's `rate_limits` (5-hour / weekly) into the usage snapshot. An existing statusLine is chained (still shown) and restored by `--uninstall`; `--skip-statusline` opts out.
 - `agy_models` works without the `agy` CLI: it falls back to the models and quota reported by the Antigravity desktop app (`"source": "desktop"`).
 - Desktop jobs: when the app agent writes an estimated `completed_at` more than 10 s away from when its result file was really written, the real time is used (the agent's claim is kept as `agent_completed_at`), so elapsed times and notifications are accurate.
+- Model choice (CLI): models the account's `agy` doesn't offer are skipped, and a tier with none available falls back to the nearest tier (e.g. `deep` → `balanced`) instead of failing. Found on a Pro account whose CLI has no `gemini-4-*` models.
+- Setup adds the `node`/`agy` folder to PATH in the shell profile on macOS/Linux when missing (never duplicates a line you wrote; `--skip-path`), and prints next-step commands with the full Node path.
 - Project binding guard: the `allow_non_project` description, the MCP instructions and the PROJECT_BINDING_REQUIRED message now tell Claude never to open a Non-Project conversation on its own (it cannot be moved into a project later) and to ask the user which project to use. Verified on macOS: an unbound cwd is refused and the user's projects are listed.
 - Dashboard (macOS): the Claude hub icon now uses the colored app icon from the `.icns` instead of the black menu-bar template, which looked switched off on the dark background.
 

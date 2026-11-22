@@ -126,3 +126,45 @@ test('desktop result: an invented completed_at is replaced by when the file was 
   const none = fromAgentResult({}, { status: 'done' }, { observedAt });
   assert.equal(none.completed_at, observedAt);
 });
+
+test('router skips models the account does not have and falls back to the nearest tier', async () => {
+  const { pickModel } = await import('../src/lib/router.mjs');
+  const cfg = { tiers: { fast: ['f1'], balanced: ['b1', 'neon-med'], deep: ['neon-x', 'argon'] }, quota_min_fraction: 0.1 };
+  const deep = pickModel(cfg, { tier: 'deep', prompt: 'x' }, {}, ['f1', 'b1']);
+  assert.equal(deep.model, 'b1');
+  assert.equal(deep.tier, 'balanced');
+  assert.match(deep.reason, /no model available/);
+  assert.equal(pickModel(cfg, { tier: 'balanced', prompt: 'x' }, {}, ['f1', 'neon-med']).model, 'neon-med');
+  assert.equal(pickModel(cfg, { tier: 'deep', prompt: 'x' }, {}, []).model, 'neon-x', 'unknown availability keeps the config');
+  assert.throws(() => pickModel(cfg, { tier: 'deep', prompt: 'x' }, {}, ['zzz']), /not available|are available/);
+});
+
+test('PATH helper finds missing folders and writes one idempotent, backed-up block', async () => {
+  const { missingPathDirs, ensurePathInRc } = await import('../scripts/setup.mjs');
+  const home = tmp('gcsa-path-');
+  fs.mkdirSync(path.join(home, '.local', 'bin'), { recursive: true });
+  fs.writeFileSync(path.join(home, '.local', 'bin', 'node'), '');
+  const agy = path.join(home, '.local', 'bin', 'agy');
+  const dirs = missingPathDirs({ node: path.join(home, '.local', 'node', 'bin', 'node'), agy, envPath: '/usr/bin:/bin', home });
+  assert.deepEqual(dirs, [path.join(home, '.local', 'bin')]);
+  assert.deepEqual(missingPathDirs({ node: '/usr/bin/node', agy: null, envPath: '/usr/bin', home: tmp('gcsa-h-') }), []);
+  const rc = path.join(home, '.zshrc');
+  fs.writeFileSync(rc, 'alias ll="ls -l"\n');
+  const r = ensurePathInRc(dirs, { rcFile: rc, home });
+  assert.equal(r.status, 'added');
+  assert.ok(fs.existsSync(r.backup));
+  const text = fs.readFileSync(rc, 'utf8');
+  assert.match(text, /alias ll/);
+  assert.match(text, /export PATH="\$HOME\/\.local\/bin:\$PATH"/);
+  assert.equal(ensurePathInRc(dirs, { rcFile: rc, home }).status, 'present');
+  assert.equal(fs.readFileSync(rc, 'utf8'), text, 'second run changes nothing');
+});
+
+test('PATH helper does not duplicate a PATH line the user already wrote', async () => {
+  const { ensurePathInRc } = await import('../scripts/setup.mjs');
+  const home = tmp('gcsa-path2-');
+  const rc = path.join(home, '.zshrc');
+  fs.writeFileSync(rc, 'export PATH="$HOME/.local/bin:$PATH"\n');
+  assert.equal(ensurePathInRc([path.join(home, '.local', 'bin')], { rcFile: rc, home }).status, 'present');
+  assert.equal(fs.readFileSync(rc, 'utf8'), 'export PATH="$HOME/.local/bin:$PATH"\n');
+});

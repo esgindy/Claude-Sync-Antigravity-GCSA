@@ -23,7 +23,13 @@ export function autoTier({ prompt = '', kind = 'read', addDirs = [] } = {}) {
   return { tier: 'balanced', reason: 'default for a medium task' };
 }
 
-export function pickModel(config, { tier, model, prompt, kind, addDirs } = {}, quotaMap = {}) {
+const TIER_FALLBACK = { deep: ['balanced', 'fast'], balanced: ['fast', 'deep'], fast: ['balanced', 'deep'] };
+
+/**
+ * available: ids the agy CLI reports for this account (empty/omitted = unknown, use the config as is).
+ * Models the account doesn't have are skipped; if a whole tier is unavailable, the nearest tier is used.
+ */
+export function pickModel(config, { tier, model, prompt, kind, addDirs } = {}, quotaMap = {}, available = []) {
   if (model) return { model, tier: tier && tier !== 'auto' ? tier : 'explicit', reason: 'model chosen explicitly by the caller' };
   let t = tier && tier !== 'auto' ? tier : null;
   let why = t ? `tier "${t}" chosen by the caller` : null;
@@ -32,8 +38,17 @@ export function pickModel(config, { tier, model, prompt, kind, addDirs } = {}, q
     t = a.tier;
     why = `auto: ${a.reason}`;
   }
-  const list = config?.tiers?.[t];
-  if (!Array.isArray(list) || !list.length) throw new Error(`No models configured for tier "${t}".`);
+  const configured = config?.tiers?.[t];
+  if (!Array.isArray(configured) || !configured.length) throw new Error(`No models configured for tier "${t}".`);
+  const avail = new Set((available || []).map((x) => String(x)));
+  let list = avail.size ? configured.filter((id) => avail.has(id)) : configured;
+  if (!list.length) {
+    const alt = (TIER_FALLBACK[t] || []).find((x) => (config?.tiers?.[x] || []).some((id) => avail.has(id)));
+    if (!alt) throw new Error(`None of the models configured for tier "${t}" (${configured.join(', ')}) are available to this Antigravity account. Run agy_models and update "tiers" in config.json.`);
+    why = `${why}; tier "${t}" has no model available to this account, using "${alt}"`;
+    t = alt;
+    list = config.tiers[alt].filter((id) => avail.has(id));
+  }
   const min = config.quota_min_fraction ?? 0.1;
   for (const id of list) {
     const f = quotaMap?.[id];

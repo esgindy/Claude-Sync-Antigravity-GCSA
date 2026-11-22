@@ -84,7 +84,7 @@ export async function resolveModel(config, input, target) {
       quotaMap = quotaById(q, models);
     } catch { /* ignore quota errors */ }
   }
-  return pickModel(config, { ...base, tier: input.tier, model: explicit }, quotaMap);
+  return pickModel(config, { ...base, tier: input.tier, model: explicit }, quotaMap, models.map((m) => m.id));
 }
 
 export async function startJob(input = {}) {

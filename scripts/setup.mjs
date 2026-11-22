@@ -5,7 +5,7 @@
 //   node scripts/setup.mjs --dry-run       show what would change, write nothing
 //   node scripts/setup.mjs --uninstall     remove the GCSA entries from the app configs
 //   node scripts/setup.mjs --only claude-code,claude-desktop,antigravity
-//   node scripts/setup.mjs --skip-deps --skip-verify --skip-agy --skip-statusline
+//   node scripts/setup.mjs --skip-deps --skip-verify --skip-agy --skip-statusline --skip-path
 //
 // Also: installs the official Antigravity `agy` CLI when missing (antigravity.google/cli, SHA-512
 // verified by Google's installer) and sets a Claude Code statusLine that keeps the dashboard's
@@ -176,6 +176,51 @@ export function applyStatusLine(plan, { dryRun = false, remove = false, stamp = 
   return { status, backup: writeJsonWithBackup(plan.file, data, stamp) };
 }
 
+// ---------- PATH (macOS / Linux) ----------
+// GCSA itself never needs PATH (configs use absolute paths), but people type `node`, `npm` and `agy`.
+
+const PATH_MARK = '# >>> GCSA PATH >>>';
+
+/** Folders holding node / agy that are missing from PATH. */
+export function missingPathDirs({ node = process.execPath, agy = firstExisting(agyCandidates()), envPath = process.env.PATH || '', home = userHome() } = {}) {
+  const have = new Set(envPath.split(path.delimiter).filter(Boolean).map((d) => path.resolve(d.replace(/^~(?=\/|$)/, home))));
+  const want = [];
+  const nodeDir = path.dirname(node);
+  // prefer ~/.local/bin when node is linked there (manual Node installs), else node's own folder
+  const localBin = path.join(home, '.local', 'bin');
+  const nodeVia = fs.existsSync(path.join(localBin, 'node')) ? localBin : nodeDir;
+  for (const d of [nodeVia, agy ? path.dirname(agy) : null]) {
+    if (d && !have.has(path.resolve(d)) && !want.includes(d)) want.push(d);
+  }
+  return want;
+}
+
+export function shellRcFile({ home = userHome(), shell = process.env.SHELL || '' } = {}) {
+  if (/bash$/.test(shell)) return path.join(home, PLATFORM === 'darwin' ? '.bash_profile' : '.bashrc');
+  if (/zsh$/.test(shell) || PLATFORM === 'darwin') return path.join(home, '.zshrc');
+  return path.join(home, '.profile');
+}
+
+/** Add one marked, idempotent export line to the shell profile. */
+export function ensurePathInRc(dirs, { rcFile = shellRcFile(), home = userHome(), dryRun = false, stamp = timestamp() } = {}) {
+  if (!dirs.length) return { status: 'present' };
+  let cur = '';
+  try { cur = fs.readFileSync(rcFile, 'utf8'); } catch { /* new file */ }
+  if (cur.includes(PATH_MARK)) return { status: 'present', rcFile };
+  const show = (d) => (d.startsWith(home + path.sep) ? `$HOME${d.slice(home.length)}` : d);
+  // Already exported by the user (e.g. export PATH="$HOME/.local/bin:$PATH")? Then don't duplicate it.
+  const exported = cur.split('\n').filter((l) => /^\s*(export\s+)?PATH=/.test(l)).join('\n');
+  const forms = (d) => [d, show(d), show(d).replace('$HOME', '${HOME}'), show(d).replace('$HOME', '~')];
+  dirs = dirs.filter((d) => !forms(d).some((f) => exported.includes(f)));
+  if (!dirs.length) return { status: 'present', rcFile };
+  const block = `\n${PATH_MARK}\nexport PATH="${dirs.map(show).join(':')}:$PATH"\n# <<< GCSA PATH <<<\n`;
+  if (dryRun) return { status: 'added', rcFile, dryRun: true };
+  let backup = null;
+  if (cur) { backup = `${rcFile}.bak-gcsa-${stamp}`; fs.copyFileSync(rcFile, backup); }
+  fs.appendFileSync(rcFile, block);
+  return { status: 'added', rcFile, backup };
+}
+
 // ---------- Antigravity agy CLI ----------
 
 export const AGY_INSTALL = {
@@ -275,7 +320,7 @@ async function environmentReport() {
 // ---------- CLI ----------
 
 function parseArgs(argv) {
-  const o = { dryRun: false, uninstall: false, only: TARGETS, skipDeps: false, skipVerify: false, skipAgy: false, skipStatusLine: false, help: false };
+  const o = { dryRun: false, uninstall: false, only: TARGETS, skipDeps: false, skipVerify: false, skipAgy: false, skipStatusLine: false, skipPath: false, help: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--dry-run') o.dryRun = true;
@@ -284,6 +329,7 @@ function parseArgs(argv) {
     else if (a === '--skip-verify') o.skipVerify = true;
     else if (a === '--skip-agy') o.skipAgy = true;
     else if (a === '--skip-statusline') o.skipStatusLine = true;
+    else if (a === '--skip-path') o.skipPath = true;
     else if (a === '-h' || a === '--help') o.help = true;
     else if (a === '--only' || a.startsWith('--only=')) {
       const v = a.includes('=') ? a.split('=')[1] : argv[++i];
@@ -380,15 +426,30 @@ async function main() {
     else say('warn', `agy CLI could not be installed automatically (${a.error || `exit ${a.code}`}). Install it by hand: ${isWin ? 'irm https://antigravity.google/cli/install.ps1 | iex' : 'curl -fsSL https://antigravity.google/cli/install.sh | bash'} — GCSA still works through the Antigravity Desktop app meanwhile.`);
   }
 
-  // 8. Environment
+  // 8. PATH for typing node / npm / agy in a terminal (macOS / Linux; Windows installers handle PATH)
+  let pathNote = '';
+  if (!isWin && !opts.skipPath) {
+    const dirs = missingPathDirs();
+    if (dirs.length) {
+      console.log('\nTerminal PATH:');
+      const r = ensurePathInRc(dirs, { dryRun: opts.dryRun, stamp });
+      if (r.status === 'added') {
+        say('ok', `Added ${dirs.join(', ')} to PATH in ${r.rcFile}${r.dryRun ? ' (would be)' : ''}${r.backup ? `\n      backup: ${r.backup}` : ''}`);
+        pathNote = '  Open a NEW terminal window so `node`, `npm` and `agy` work there.\n';
+      } else say('ok', `${r.rcFile} already adds ${dirs.join(', ')} to PATH (open a new terminal window if \`node\`/\`agy\` are not found).`);
+    }
+  }
+
+  // 9. Environment
   console.log('\nEnvironment:');
   for (const [k, m] of await environmentReport()) say(k, m);
 
+  const nodeCmd = isWin ? 'node' : `"${process.execPath}"`;
   console.log(`\nNext steps:
   1. ${changed ? 'Restart Claude Desktop and Antigravity, and open a new Claude Code session' : 'Nothing changed; restart the apps only if they were open before an earlier setup'}.
   2. Open Antigravity, then ask Claude to run agy_desktop_status.
-  3. Dashboard: npm run dashboard  →  http://127.0.0.1:4317/
-  To remove: node scripts/setup.mjs --uninstall
+  3. Dashboard: ${nodeCmd} dashboard/server.mjs  →  http://127.0.0.1:4317/
+${pathNote}  To remove: ${nodeCmd} scripts/setup.mjs --uninstall
 `);
 }
 

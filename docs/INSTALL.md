@@ -6,7 +6,7 @@ GCSA (Claude Sync Antigravity) 5.0.0 (V5). Unofficial tool by Eslam Elgindy, not
 
 1. Install Node.js 20+ (https://nodejs.org; macOS can also use `brew install node`).
 2. Put the project in a **local** folder, not a cloud-synced one (OneDrive/Dropbox/iCloud can lock or evict files while the servers run). For example `~/GCSA` or `C:\GCSA`.
-3. From that folder:
+3. From that folder (if `node` is "command not found" because Node was installed without a package manager, use its full path, e.g. `~/.local/node/bin/node scripts/setup.mjs`; setup then fixes PATH for new terminals):
 
 ```bash
 node scripts/setup.mjs --dry-run   # preview: what would change, nothing is written
@@ -20,9 +20,10 @@ The setup script:
 - backs up every config it changes (`<file>.bak-gcsa-<timestamp>`), never overwrites a config it can't parse, skips apps that aren't installed, and is safe to re-run (unchanged entries are left alone, a moved install is updated);
 - sets a Claude Code **statusLine** (`scripts/claude-statusline.mjs`) in `~/.claude/settings.json` so the dashboard's Claude usage stays fresh automatically (see section 7). If you already have a statusLine it is kept and still shown (GCSA runs it for you), and `--uninstall` puts it back;
 - installs the official Antigravity **`agy` CLI** when it is missing, using Google's own installer (`https://antigravity.google/cli/install.sh` on macOS/Linux → `~/.local/bin/agy`; `https://antigravity.google/cli/install.ps1` on Windows → `%LOCALAPPDATA%\agy\bin\agy.exe`; the installer verifies the SHA-512 of the download). If that fails, GCSA still works through the Antigravity desktop app and setup prints the manual command;
+- on macOS/Linux, adds the folders of `node` and `agy` (usually `~/.local/bin`) to `PATH` in your shell profile (`~/.zshrc` on macOS) with one marked block, only if they are missing and not already exported by you, so `node`, `npm` and `agy` work in new terminal windows. `--skip-path` opts out. GCSA itself never needs PATH: every config uses absolute paths;
 - starts both servers once to check they answer, then reports Antigravity's command policy and whether `agy` / `claude` CLIs are present.
 
-Options: `--only claude-code,claude-desktop,antigravity`, `--skip-deps`, `--skip-verify`, `--skip-agy` (don't install the agy CLI), `--skip-statusline` (don't touch `~/.claude/settings.json`), `--uninstall` (removes only the GCSA entries and the GCSA statusLine). npm shortcuts: `npm run setup`, `npm run setup:check`, `npm run uninstall-mcp`.
+Options: `--only claude-code,claude-desktop,antigravity`, `--skip-deps`, `--skip-verify`, `--skip-agy` (don't install the agy CLI), `--skip-statusline` (don't touch `~/.claude/settings.json`), `--skip-path` (don't touch your shell profile), `--uninstall` (removes only the GCSA entries and the GCSA statusLine). npm shortcuts: `npm run setup`, `npm run setup:check`, `npm run uninstall-mcp`.
 
 Afterwards restart Claude Desktop and Antigravity and open a new Claude Code session. The manual steps below do the same thing by hand.
 
