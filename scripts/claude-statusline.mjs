@@ -66,6 +66,17 @@ async function main() {
   let usage = null;
   try {
     usage = usageFromStatusJson(input);
+    // Diagnostics only (no content): proves Claude Code runs the statusLine and whether it sent rate_limits.
+    const { stateHome } = await import('../src/lib/platform.mjs');
+    const home = process.env.CSA_HOME ? path.resolve(process.env.CSA_HOME) : stateHome();
+    fs.mkdirSync(home, { recursive: true });
+    fs.writeFileSync(path.join(home, 'statusline-last-run.json'), JSON.stringify({
+      at: new Date().toISOString(),
+      got_json: !!input,
+      has_rate_limits: !!(input && input.rate_limits),
+      usage_written: !!usage,
+      claude_code_version: typeof input?.version === 'string' ? input.version.slice(0, 40) : null,
+    }, null, 2) + '\n');
     if (usage) {
       const lib = await import('../src/lib/claude-usage.mjs');
       if (shouldWrite(lib.snapshotFile(), usage)) lib.writeClaudeUsageSnapshot(usage, { updateStatus: true });

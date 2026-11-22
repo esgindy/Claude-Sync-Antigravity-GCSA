@@ -192,7 +192,9 @@ GCSA v3.5.0 automatically refreshes Claude Code usage on the dashboard bottom us
 
 ### Automatic: the GCSA statusLine (set by setup)
 
-Claude Code runs its statusLine command after each message and passes it JSON that, for Pro/Max subscribers, contains `rate_limits.five_hour` and `rate_limits.seven_day` (`used_percentage`, `resets_at`). `scripts/claude-statusline.mjs` turns those into the snapshot below, at most once a minute unless the numbers change. It reads only that stdin: no credentials, no files under `~/.claude`. Claude also calls `csa_board set_usage` when it delegates work, which covers sessions where no statusLine runs.
+Claude Code runs its statusLine command after each message and passes it JSON that, for Pro/Max subscribers, contains `rate_limits.five_hour` and `rate_limits.seven_day` (`used_percentage`, `resets_at`). `scripts/claude-statusline.mjs` turns those into the snapshot below, at most once a minute unless the numbers change. It reads only that stdin: no credentials, no files under `~/.claude`. Each run also writes `<CSA_HOME>/statusline-last-run.json` (time, whether `rate_limits` arrived; no content) so you can check it is being called.
+
+> **Claude desktop app:** its Code tab does **not** run statusLine commands (verified on macOS, 2026-11-22). There, Claude pushes the real numbers itself with `csa_board set_usage` (the GCSA MCP instructions tell it to, using the app's own plan-usage data) when it starts delegating and while it waits on jobs. Between those moments the dashboard shows the last value marked `stale`.
 
 ### Usage Sources (First Valid Wins)
 

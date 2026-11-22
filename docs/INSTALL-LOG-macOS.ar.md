@@ -76,6 +76,7 @@ node scripts/setup.mjs --uninstall
 |---|---|
 | أيقونة Claude في الداشبورد شكلها مطفي | على الماك كان بياخد `TrayIconTemplate.png`، ودي أيقونة شريط القوائم السودا. دلوقتي بياخد الأيقونة الملوّنة من `.icns` بتاع التطبيق |
 | استهلاك Claude مكتوب "غير متاح" | التسطيب بيضيف statusLine لـ Claude Code بيبعت حدود الـ 5 ساعات والأسبوعي تلقائي. لو فيه statusLine قديم بيفضل ظاهر، وبيرجع زي ما كان مع `--uninstall` |
+| الـ statusLine مابيتشغّلش في Claude Desktop | اتجرب: تبويب Code في تطبيق Claude Desktop مابيشغّلش الـ statusLine خالص. هناك Claude بيقرا الأرقام الحقيقية من التطبيق ويبعتها بـ `csa_board set_usage` مع كل مهمة. الـ statusLine بيشتغل بس مع Claude Code في الـ Terminal |
 | `agy_models` بيفشل من غير `agy` CLI | التسطيب بيسطّب `agy` من السكريبت الرسمي بتاع Google. ولو مش موجود، `agy_models` بياخد الموديلات من تطبيق Antigravity |
 | وقت الانتهاء غلط | الـ agent كتب وقت انتهاء تقديري. دلوقتي البرنامج بياخد وقت كتابة ملف النتيجة الفعلي |
 

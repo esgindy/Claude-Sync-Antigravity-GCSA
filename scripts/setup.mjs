@@ -399,7 +399,7 @@ async function main() {
         chained: 'added; your existing statusLine is kept and still shown',
       }[r.status] || r.status;
       say('ok', `Claude Code statusLine: ${what}${r.dryRun ? ' (would be)' : ''}${r.backup ? `\n      backup: ${r.backup}` : ''}`);
-      if (!opts.uninstall) say('info', 'Claude Code passes your 5-hour/weekly limits to it (Pro/Max plans); the dashboard updates while you use Claude Code.');
+      if (!opts.uninstall) say('info', 'Claude Code in a terminal passes your 5-hour/weekly limits to it (Pro/Max plans). The Claude desktop app does not run statusLines; there Claude pushes the numbers itself when it delegates (csa_board set_usage).');
     }
   }
 
