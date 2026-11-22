@@ -172,6 +172,36 @@ function messages() {
 
 // ---------- logos read from the installed apps at runtime (never bundled in the repo) ----------
 const logoCache = {};
+// Extract an embedded PNG from a macOS .icns in <App>.app/Contents/Resources (no external tools).
+// Picks the icon named by CFBundleIconFile when readable, else any .icns in the folder.
+function macIcnsPng(resDir) {
+  let files = [];
+  try {
+    const plist = fs.readFileSync(path.join(resDir, '..', 'Info.plist'), 'utf8');
+    const m = /<key>CFBundleIconFile<\/key>\s*<string>([^<]+)<\/string>/.exec(plist);
+    if (m) files.push(m[1].endsWith('.icns') ? m[1] : `${m[1]}.icns`);
+  } catch { /* binary or missing plist: fall back to scanning */ }
+  try { files.push(...fs.readdirSync(resDir).filter((f) => f.endsWith('.icns'))); } catch { return null; }
+  const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
+  const order = ['ic08', 'ic09', 'ic14', 'ic07', 'ic13', 'ic10']; // 256px first: crisp at 100px, small payload
+  for (const f of [...new Set(files)]) {
+    try {
+      const b = fs.readFileSync(path.join(resDir, f));
+      if (b.length > 20e6 || b.toString('latin1', 0, 4) !== 'icns') continue;
+      const chunks = {};
+      for (let i = 8; i + 8 <= b.length;) {
+        const type = b.toString('latin1', i, i + 4), len = b.readUInt32BE(i + 4);
+        if (len < 8 || i + len > b.length) break;
+        const data = b.subarray(i + 8, i + len);
+        if (data.subarray(0, 4).equals(PNG)) chunks[type] = data;
+        i += len;
+      }
+      const hit = order.find((t) => chunks[t]) || Object.keys(chunks)[0];
+      if (hit) return Buffer.from(chunks[hit]);
+    } catch { /* try next file */ }
+  }
+  return null;
+}
 function claudeLogo() {
   const readFromPkgDir = (pkgDir) => {
     if (!pkgDir) return null;
@@ -185,6 +215,12 @@ function claudeLogo() {
     return null;
   };
   if (!isWin) {
+    // Prefer the real colored app icon (.icns). TrayIconTemplate*.png are macOS menu-bar
+    // template images: black monochrome by design, so they look "off" on the dark dashboard.
+    for (const dir of claudeAppResourceDirs()) {
+      const buf = macIcnsPng(dir);
+      if (buf) return buf;
+    }
     for (const dir of claudeAppResourceDirs()) {
       for (const f of ['TrayIconTemplate@3x.png', 'TrayIconTemplate@2x.png', 'TrayIconTemplate.png']) {
         try { return fs.readFileSync(path.join(dir, f)); } catch { /* try next */ }
