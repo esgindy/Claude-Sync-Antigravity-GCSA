@@ -5,7 +5,11 @@
 //   node scripts/setup.mjs --dry-run       show what would change, write nothing
 //   node scripts/setup.mjs --uninstall     remove the GCSA entries from the app configs
 //   node scripts/setup.mjs --only claude-code,claude-desktop,antigravity
-//   node scripts/setup.mjs --skip-deps --skip-verify
+//   node scripts/setup.mjs --skip-deps --skip-verify --skip-agy --skip-statusline
+//
+// Also: installs the official Antigravity `agy` CLI when missing (antigravity.google/cli, SHA-512
+// verified by Google's installer) and sets a Claude Code statusLine that keeps the dashboard's
+// Claude usage fresh (an existing statusLine is kept and chained, and restored on --uninstall).
 //
 // Runs before `npm install`: imports only Node built-ins and src/lib/platform.mjs.
 // Every config file it changes is backed up first (<file>.bak-gcsa-<timestamp>) and written atomically.
@@ -89,17 +93,105 @@ export function applyEntry(plan, { dryRun = false, remove = false, stamp = times
   }
   data.mcpServers = servers;
   if (dryRun) return { status, dryRun: true };
+  return { status, backup: writeJsonWithBackup(plan.file, data, stamp) };
+}
+
+/** Back up (if present) and atomically write a JSON config. Returns the backup path or null. */
+function writeJsonWithBackup(file, data, stamp) {
   let backup = null;
-  if (fs.existsSync(plan.file)) {
-    backup = `${plan.file}.bak-gcsa-${stamp}`;
-    fs.copyFileSync(plan.file, backup);
+  if (fs.existsSync(file)) {
+    backup = `${file}.bak-gcsa-${stamp}`;
+    fs.copyFileSync(file, backup);
   }
-  fs.mkdirSync(path.dirname(plan.file), { recursive: true });
-  const tmp = `${plan.file}.gcsa-${process.pid}.tmp`;
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = `${file}.gcsa-${process.pid}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(data, null, 2) + '\n', { mode: 0o600 });
   try { if (backup) fs.chmodSync(tmp, fs.statSync(backup).mode & 0o777); } catch { /* keep 0600 */ }
-  fs.renameSync(tmp, plan.file);
-  return { status, backup };
+  fs.renameSync(tmp, file);
+  return backup;
+}
+
+// ---------- Claude Code statusLine (automatic Claude usage for the dashboard) ----------
+
+const STATUSLINE_SCRIPT = 'claude-statusline.mjs';
+
+/** Shell-safe command for settings.json. Forward slashes work for node and for Claude Code's shell on Windows too. */
+export function statusLineCommand({ node = process.execPath, root = ROOT, win = isWin } = {}) {
+  const fix = (p) => (win ? p.replace(/\\/g, '/') : p);
+  const q = (p) => `"${fix(p).replace(/(["\\$`])/g, '\\$1')}"`;
+  return `${q(node)} ${q(path.join(root, 'scripts', STATUSLINE_SCRIPT))}`;
+}
+
+export function statusLinePlan({ home = userHome(), node = process.execPath, root = ROOT, csaHome, win = isWin } = {}) {
+  const claudeDir = path.join(home, '.claude');
+  const state = csaHome || (process.env.CSA_HOME ? path.resolve(process.env.CSA_HOME) : stateHome());
+  return {
+    file: path.join(claudeDir, 'settings.json'),
+    requires: claudeDir,
+    chainFile: path.join(state, 'statusline-chain.json'),
+    entry: { type: 'command', command: statusLineCommand({ node, root, win }), padding: 0 },
+  };
+}
+
+const isOurStatusLine = (sl) => !!sl && typeof sl.command === 'string' && sl.command.includes(STATUSLINE_SCRIPT);
+
+/**
+ * Install/update/remove the GCSA statusLine in ~/.claude/settings.json.
+ * A different pre-existing statusLine is saved to chainFile and still displayed (our script runs it).
+ * Returns { status: 'added'|'updated'|'chained'|'unchanged'|'removed'|'restored'|'absent'|'skipped', backup?, reason? }.
+ */
+export function applyStatusLine(plan, { dryRun = false, remove = false, stamp = timestamp() } = {}) {
+  if (!fs.existsSync(plan.requires)) return { status: 'skipped', reason: 'Claude Code does not look installed (no ~/.claude).' };
+  let data;
+  try { data = readJsonLoose(plan.file); } catch (e) {
+    return { status: 'skipped', reason: `cannot parse ${plan.file} (${e.message}); fix it by hand, nothing was changed.` };
+  }
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    return { status: 'skipped', reason: `${plan.file} is not a JSON object; nothing was changed.` };
+  }
+  const cur = data.statusLine;
+  let chain = null;
+  try { chain = JSON.parse(fs.readFileSync(plan.chainFile, 'utf8')); } catch { /* none */ }
+
+  if (remove) {
+    if (!isOurStatusLine(cur)) return { status: 'absent' };
+    let status = 'removed';
+    if (chain?.original && typeof chain.original === 'object') { data.statusLine = chain.original; status = 'restored'; }
+    else delete data.statusLine;
+    if (dryRun) return { status, dryRun: true };
+    const backup = writeJsonWithBackup(plan.file, data, stamp);
+    try { fs.unlinkSync(plan.chainFile); } catch { /* none */ }
+    return { status, backup };
+  }
+
+  if (isOurStatusLine(cur) && sameJson(cur, plan.entry)) return { status: 'unchanged' };
+  let status = cur ? (isOurStatusLine(cur) ? 'updated' : 'chained') : 'added';
+  if (dryRun) return { status, dryRun: true };
+  if (status === 'chained') {
+    fs.mkdirSync(path.dirname(plan.chainFile), { recursive: true });
+    const command = cur && cur.type === 'command' && typeof cur.command === 'string' ? cur.command : '';
+    fs.writeFileSync(plan.chainFile, JSON.stringify({ command, original: cur, saved_at: new Date().toISOString() }, null, 2) + '\n', { mode: 0o600 });
+  }
+  data.statusLine = plan.entry;
+  return { status, backup: writeJsonWithBackup(plan.file, data, stamp) };
+}
+
+// ---------- Antigravity agy CLI ----------
+
+export const AGY_INSTALL = {
+  unix: ['/bin/bash', ['-c', 'set -o pipefail; curl -fsSL https://antigravity.google/cli/install.sh | bash']],
+  win: ['powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', 'irm https://antigravity.google/cli/install.ps1 | iex']],
+};
+
+/** Install the official agy CLI if it is missing. */
+function installAgyCli() {
+  const before = firstExisting(agyCandidates());
+  if (before) return { status: 'present', path: before };
+  const [cmd, args] = isWin ? AGY_INSTALL.win : AGY_INSTALL.unix;
+  const r = spawnSync(cmd, args, { stdio: 'inherit', windowsHide: true, timeout: 300_000 });
+  const after = firstExisting(agyCandidates());
+  if (after) return { status: 'installed', path: after };
+  return { status: 'failed', code: r.status, error: r.error?.message };
 }
 
 /** Warnings about where the project / Node live (lessons from real installs). */
@@ -183,13 +275,15 @@ async function environmentReport() {
 // ---------- CLI ----------
 
 function parseArgs(argv) {
-  const o = { dryRun: false, uninstall: false, only: TARGETS, skipDeps: false, skipVerify: false, help: false };
+  const o = { dryRun: false, uninstall: false, only: TARGETS, skipDeps: false, skipVerify: false, skipAgy: false, skipStatusLine: false, help: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--dry-run') o.dryRun = true;
     else if (a === '--uninstall') o.uninstall = true;
     else if (a === '--skip-deps') o.skipDeps = true;
     else if (a === '--skip-verify') o.skipVerify = true;
+    else if (a === '--skip-agy') o.skipAgy = true;
+    else if (a === '--skip-statusline') o.skipStatusLine = true;
     else if (a === '-h' || a === '--help') o.help = true;
     else if (a === '--only' || a.startsWith('--only=')) {
       const v = a.includes('=') ? a.split('=')[1] : argv[++i];
@@ -208,7 +302,7 @@ async function main() {
   let opts;
   try { opts = parseArgs(process.argv.slice(2)); } catch (e) { console.error(e.message); process.exit(2); }
   if (opts.help) {
-    console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 9).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
+    console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 13).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
     return;
   }
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
@@ -246,12 +340,28 @@ async function main() {
     say('ok', `${plan.app}: "${plan.key}" ${r.status}${r.dryRun ? ' (would be)' : ''} in ${plan.file}${r.backup ? `\n      backup: ${r.backup}` : ''}`);
   }
 
+  // 5. Claude Code statusLine → automatic Claude usage on the dashboard
+  if (!opts.skipStatusLine && opts.only.includes('claude-code')) {
+    console.log(`\n${opts.uninstall ? 'Removing' : 'Setting'} the Claude usage statusLine:`);
+    const r = applyStatusLine(statusLinePlan(), { dryRun: opts.dryRun, remove: opts.uninstall, stamp });
+    if (r.status === 'skipped') say('warn', `statusLine: skipped — ${r.reason}`);
+    else {
+      const what = {
+        added: 'added', updated: 'updated', unchanged: 'already set', absent: 'not set by GCSA (left alone)',
+        removed: 'removed', restored: 'removed; your previous statusLine was restored',
+        chained: 'added; your existing statusLine is kept and still shown',
+      }[r.status] || r.status;
+      say('ok', `Claude Code statusLine: ${what}${r.dryRun ? ' (would be)' : ''}${r.backup ? `\n      backup: ${r.backup}` : ''}`);
+      if (!opts.uninstall) say('info', 'Claude Code passes your 5-hour/weekly limits to it (Pro/Max plans); the dashboard updates while you use Claude Code.');
+    }
+  }
+
   if (opts.uninstall) {
     console.log(`\nDone. Restart the apps to drop the servers. Project files and ${stateHome()} were left in place.\n`);
     return;
   }
 
-  // 5. Verify the servers answer
+  // 6. Verify the servers answer
   if (!opts.skipVerify && !opts.dryRun) {
     console.log('\nChecking the servers:');
     for (const f of ['claude-side.mjs', 'antigravity-side.mjs']) {
@@ -260,7 +370,16 @@ async function main() {
     }
   }
 
-  // 6. Environment
+  // 7. agy CLI (official installer, only when missing)
+  if (!opts.skipAgy && !opts.dryRun) {
+    console.log('\nAntigravity agy CLI:');
+    const a = installAgyCli();
+    if (a.status === 'present') say('ok', `agy CLI already installed: ${a.path}`);
+    else if (a.status === 'installed') say('ok', `agy CLI installed: ${a.path}`);
+    else say('warn', `agy CLI could not be installed automatically (${a.error || `exit ${a.code}`}). Install it by hand: ${isWin ? 'irm https://antigravity.google/cli/install.ps1 | iex' : 'curl -fsSL https://antigravity.google/cli/install.sh | bash'} — GCSA still works through the Antigravity Desktop app meanwhile.`);
+  }
+
+  // 8. Environment
   console.log('\nEnvironment:');
   for (const [k, m] of await environmentReport()) say(k, m);
 

@@ -57,17 +57,25 @@ function readAgentResult(file) {
 const arr = (v) => (Array.isArray(v) ? v : []);
 const STATUSES = new Set(['done', 'needs_approval', 'blocked', 'failed']);
 
+// Agents often estimate "completed_at" instead of reading a clock. When we know when the result
+// file was really written (observedAt), a claim more than this far off is replaced by the real time.
+export const COMPLETED_AT_TOLERANCE_MS = 10_000;
+
 // Normalises what the app agent wrote into a result.json object.
-export function fromAgentResult(base, r) {
+export function fromAgentResult(base, r, { observedAt = null } = {}) {
   const status = STATUSES.has(r.status) ? r.status : 'done';
-  const completed_at = typeof r.completed_at === 'string' && !Number.isNaN(Date.parse(r.completed_at))
-    ? new Date(Date.parse(r.completed_at)).toISOString()
-    : new Date().toISOString();
+  const claimedMs = typeof r.completed_at === 'string' ? Date.parse(r.completed_at) : NaN;
+  const observedMs = observedAt ? Date.parse(observedAt) : NaN;
+  let completedMs = Number.isNaN(claimedMs) ? (Number.isNaN(observedMs) ? Date.now() : observedMs) : claimedMs;
+  if (!Number.isNaN(observedMs) && Math.abs(completedMs - observedMs) > COMPLETED_AT_TOLERANCE_MS) completedMs = observedMs;
+  const completed_at = new Date(completedMs).toISOString();
+  const agentClaim = Number.isNaN(claimedMs) ? null : new Date(claimedMs).toISOString();
   return {
     ...base,
     state: status === 'failed' ? 'failed' : 'done',
     status,
     completed_at,
+    ...(agentClaim && agentClaim !== completed_at ? { agent_completed_at: agentClaim } : {}),
     summary: String(r.summary ?? ''),
     files_changed: arr(r.files_changed),
     commands_requested: arr(r.commands_requested),
@@ -198,7 +206,9 @@ export async function runDesktopJob(job, ctx) {
     } catch {}
     const r = readAgentResult(resultFile);
     if (r) {
-      const out = applyReadOnlyCheck(fromAgentResult(base, r), job);
+      let observedAt = new Date().toISOString();
+      try { observedAt = fs.statSync(resultFile).mtime.toISOString(); } catch { /* use now */ }
+      const out = applyReadOnlyCheck(fromAgentResult(base, r, { observedAt }), job);
       writeResult(out);
       const startMs = Date.parse(job.started || job.created || '') || Date.now();
       const endMs = Date.parse(out.completed_at || '') || Date.now();

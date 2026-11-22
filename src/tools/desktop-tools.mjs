@@ -12,7 +12,7 @@ export function register(server) {
       cwd: z.string().describe('Absolute working directory'),
       title: z.string().optional().describe('Conversation title'),
       conversation_id: z.string().optional().describe('Continue an existing app conversation'),
-      allow_non_project: z.boolean().optional().describe('Allow opening a new conversation in Non-Project when cwd is not bound to an Antigravity project'),
+      allow_non_project: z.boolean().optional().describe('Opens a new Desktop conversation in Non-Project when cwd is not bound to an Antigravity project. ONLY when the user explicitly asked for a Non-Project conversation. Never set it on your own: a Non-Project conversation cannot be moved into a project later. If the task is refused with PROJECT_BINDING_REQUIRED, ask the user which Antigravity project/conversation to use and pass conversation_id instead.'),
       tier: z.enum(['fast', 'balanced', 'deep', 'auto']).optional(),
       kind: z.enum(['read', 'edit']).optional().describe('Default read'),
       timeout_s: z.number().int().positive().optional(),

@@ -187,7 +187,8 @@ export function buildProjectBindingRequiredError({ cwd, discovered = [] } = {}) 
     'How to proceed (طرق المتابعة):',
     `  (a / أ) Pass conversation_id: "<uuid>" of an existing conversation inside the target Antigravity project (CSA will bind and save it automatically for "${cleanCwd}").`,
     `  (b / ب) Open "${cleanCwd}" as a Project in Antigravity Desktop and start a conversation there, so CSA discovers and binds it automatically.`,
-    '  (c / ج) Pass allow_non_project: true in agy_task / agy_desktop_task if you explicitly want to open a new conversation in Non-Project (with cwd injected into the prompt header).',
+    '  (c / ج) Only if the USER explicitly asks for it: allow_non_project: true opens a new conversation in Non-Project. Such a conversation cannot be moved into a project later, so never choose this on your own — ask the user.',
+    '         فقط لو المستخدم طلب ده صراحةً: allow_non_project: true بيفتح محادثة في Non-Project، ودي مينفعش تتنقل لمشروع بعد كده. ماتختارهاش من نفسك، اسأل المستخدم.',
   ].join('\n');
 
   const message = redact(rawMsg);

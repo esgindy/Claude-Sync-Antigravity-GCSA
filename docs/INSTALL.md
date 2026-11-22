@@ -18,9 +18,11 @@ The setup script:
 - runs `npm ci --omit=dev`;
 - registers `csa` in Claude Code (`~/.claude.json`) and Claude Desktop, and `csa-antigravity` in Antigravity (`~/.gemini/config/mcp_config.json`), using the absolute path of the Node that ran it;
 - backs up every config it changes (`<file>.bak-gcsa-<timestamp>`), never overwrites a config it can't parse, skips apps that aren't installed, and is safe to re-run (unchanged entries are left alone, a moved install is updated);
+- sets a Claude Code **statusLine** (`scripts/claude-statusline.mjs`) in `~/.claude/settings.json` so the dashboard's Claude usage stays fresh automatically (see section 7). If you already have a statusLine it is kept and still shown (GCSA runs it for you), and `--uninstall` puts it back;
+- installs the official Antigravity **`agy` CLI** when it is missing, using Google's own installer (`https://antigravity.google/cli/install.sh` on macOS/Linux → `~/.local/bin/agy`; `https://antigravity.google/cli/install.ps1` on Windows → `%LOCALAPPDATA%\agy\bin\agy.exe`; the installer verifies the SHA-512 of the download). If that fails, GCSA still works through the Antigravity desktop app and setup prints the manual command;
 - starts both servers once to check they answer, then reports Antigravity's command policy and whether `agy` / `claude` CLIs are present.
 
-Options: `--only claude-code,claude-desktop,antigravity`, `--skip-deps`, `--skip-verify`, `--uninstall` (removes only the GCSA entries). npm shortcuts: `npm run setup`, `npm run setup:check`, `npm run uninstall-mcp`.
+Options: `--only claude-code,claude-desktop,antigravity`, `--skip-deps`, `--skip-verify`, `--skip-agy` (don't install the agy CLI), `--skip-statusline` (don't touch `~/.claude/settings.json`), `--uninstall` (removes only the GCSA entries and the GCSA statusLine). npm shortcuts: `npm run setup`, `npm run setup:check`, `npm run uninstall-mcp`.
 
 Afterwards restart Claude Desktop and Antigravity and open a new Claude Code session. The manual steps below do the same thing by hand.
 
@@ -177,7 +179,7 @@ Then open http://localhost:4317 in your browser. The dashboard shows the message
 
 ## 6. Check that it works
 
-In Claude Code, ask Claude to call `agy_models`. You should see the list of Antigravity models with their remaining quota. If the list is empty or shows an error, make sure the Antigravity desktop app is open and signed in.
+In Claude Code, ask Claude to call `agy_desktop_status` (should say `reachable: true`) and then `agy_models`. You should see the list of Antigravity models with their remaining quota. Without the `agy` CLI, `agy_models` still answers from the desktop app (`"source": "desktop"`). If both fail, make sure the Antigravity desktop app is open and signed in.
 
 ## 7. Automatic Claude Code Usage Refresh (v3.5.0)
 
@@ -186,6 +188,10 @@ GCSA v3.5.0 automatically refreshes Claude Code usage on the dashboard bottom us
 - Every job finish or state change
 - Every logged message in either direction (`claude->antigravity` or `antigravity->claude`)
 - Dashboard server startup and status polling
+
+### Automatic: the GCSA statusLine (set by setup)
+
+Claude Code runs its statusLine command after each message and passes it JSON that, for Pro/Max subscribers, contains `rate_limits.five_hour` and `rate_limits.seven_day` (`used_percentage`, `resets_at`). `scripts/claude-statusline.mjs` turns those into the snapshot below, at most once a minute unless the numbers change. It reads only that stdin: no credentials, no files under `~/.claude`. Claude also calls `csa_board set_usage` when it delegates work, which covers sessions where no statusLine runs.
 
 ### Usage Sources (First Valid Wins)
 
@@ -238,6 +244,6 @@ See [docs/CLAUDE-USAGE.md](CLAUDE-USAGE.md) for complete examples.
 
 - **Quota is missing:** the Antigravity app must be running. On macOS, GCSA finds the desktop hub (`/Applications/Antigravity.app/Contents/Resources/bin/language_server`) with `ps` and `lsof`; both ship with macOS.
 - **Claude usage shows `Unavailable` or `Stale`:** Claude Code does not expose an unauthenticated local quota API. Have Claude call `csa_board` `set_usage` at the start of delegated tasks, run `scripts/push-claude-usage.mjs`, or configure `claude_usage_command` in `config.json`.
-- **`agy` not found:** make sure the `agy` CLI is installed and signed in. The default location is `%LOCALAPPDATA%\agy\bin\agy.exe` on Windows. On macOS/Linux GCSA checks `~/.local/bin/agy`, `~/.gemini/antigravity/bin/agy`, `/opt/homebrew/bin/agy`, `/usr/local/bin/agy`, then `PATH`. Set `CSA_AGY_BIN` or `agy_path` to override.
+- **`agy` not found:** re-run `node scripts/setup.mjs` (it installs it), or run Google's installer by hand: `curl -fsSL https://antigravity.google/cli/install.sh | bash` (macOS/Linux) or `irm https://antigravity.google/cli/install.ps1 | iex` (Windows PowerShell). Make sure it is signed in. The default location is `%LOCALAPPDATA%\agy\bin\agy.exe` on Windows. On macOS/Linux GCSA checks `~/.local/bin/agy`, `~/.gemini/antigravity/bin/agy`, `/opt/homebrew/bin/agy`, `/usr/local/bin/agy`, then `PATH`. Set `CSA_AGY_BIN` or `agy_path` to override.
 - **Server does not appear in Claude:** check the path in the config. It must point to the real file location (double backslashes in JSON on Windows; forward slashes on macOS/Linux). On macOS, if Claude Desktop cannot find `node`, use the full path from `which node` as `command`.
 - **Approved commands behave differently on macOS:** commands you approve run in zsh on macOS (sh on Linux), not PowerShell, so use shell syntax for your OS.

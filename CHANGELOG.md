@@ -13,6 +13,12 @@ All notable changes to this project are recorded here.
 - Security hardening for macOS/Linux paths (firmlinks, `/private/var`, `~/Library` keychains/cookies, symlinked home, process-group kill of timed-out approved commands).
 - `docs/INSTALL-LOG-macOS.ar.md`: log of the first real macOS install and the lessons behind the installer.
 - Version bumped to `5.0.0` (GCSA V5).
+- **Setup installs the `agy` CLI** when it is missing, with Google's official installer (`antigravity.google/cli/install.sh` / `install.ps1`, SHA-512 verified by the installer). `--skip-agy` opts out; on failure GCSA keeps working through the desktop app and prints the manual command.
+- **Automatic Claude usage on the dashboard:** setup sets a Claude Code statusLine (`scripts/claude-statusline.mjs`) that turns Claude Code's `rate_limits` (5-hour / weekly) into the usage snapshot. An existing statusLine is chained (still shown) and restored by `--uninstall`; `--skip-statusline` opts out.
+- `agy_models` works without the `agy` CLI: it falls back to the models and quota reported by the Antigravity desktop app (`"source": "desktop"`).
+- Desktop jobs: when the app agent writes an estimated `completed_at` more than 10 s away from when its result file was really written, the real time is used (the agent's claim is kept as `agent_completed_at`), so elapsed times and notifications are accurate.
+- Project binding guard: the `allow_non_project` description, the MCP instructions and the PROJECT_BINDING_REQUIRED message now tell Claude never to open a Non-Project conversation on its own (it cannot be moved into a project later) and to ask the user which project to use. Verified on macOS: an unbound cwd is refused and the user's projects are listed.
+- Dashboard (macOS): the Claude hub icon now uses the colored app icon from the `.icns` instead of the black menu-bar template, which looked switched off on the dark background.
 
 ## 4.0.0 (GCSA V4) - 2026-11-20
 

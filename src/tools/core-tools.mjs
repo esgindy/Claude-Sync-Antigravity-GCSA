@@ -124,7 +124,7 @@ export function register(server) {
         timeout_s: z.number().int().positive().optional(),
         continue_job: z.string().optional().describe('Job id whose conversation to continue.'),
         conversation_id: z.string().optional().describe('Existing Antigravity project conversation UUID to bind/continue for this cwd.'),
-        allow_non_project: z.boolean().optional().describe('Set true to allow opening a new Desktop conversation in Non-Project when cwd is not bound to an Antigravity project.'),
+        allow_non_project: z.boolean().optional().describe('Opens a new Desktop conversation in Non-Project when cwd is not bound to an Antigravity project. ONLY when the user explicitly asked for a Non-Project conversation. Never set it on your own: a Non-Project conversation cannot be moved into a project later. If the task is refused with PROJECT_BINDING_REQUIRED, ask the user which Antigravity project/conversation to use and pass conversation_id instead.'),
         target: z.enum(['auto', 'cli', 'desktop']).optional().describe('Execution target: auto (default: desktop if available, else cli), cli, or desktop.'),
         title: z.string().optional(),
         notify_session: z.string().optional().describe('Optional Claude session name to notify on completion (with exact completed_at) or approval/permission request.'),
@@ -236,10 +236,22 @@ export function register(server) {
     },
     guard(async ({ refresh }) => {
       const config = loadConfig();
-      const models = await listModels({ refresh: !!refresh });
+      let models;
+      let cli_error;
+      try { models = await listModels({ refresh: !!refresh }); } catch (e) { cli_error = e.message; }
       let quota = null;
       let quota_error;
       try { quota = await getQuota(); } catch (e) { quota_error = e.message; }
+      if (!models) {
+        // No agy CLI (or it failed): the Antigravity desktop app still knows the models and their quota.
+        if (!quota?.models?.length) throw new Error(`${cli_error}${quota_error ? ` Desktop app: ${quota_error}` : ''} Open the Antigravity app, or install the agy CLI (node scripts/setup.mjs installs it).`);
+        return {
+          source: 'desktop',
+          note: 'Listed by the Antigravity desktop app because the agy CLI is unavailable; desktop jobs and tier "auto" work normally. Install the agy CLI (node scripts/setup.mjs) for CLI model ids.',
+          cli_error,
+          models: quota.models.map((m) => ({ id: null, label: m.label, tiers: [], remaining_pct: m.remaining_pct, resets_at: m.resets_at })),
+        };
+      }
       const map = quota ? quotaById(quota, models) : {};
       return {
         models: models.map((m) => ({
