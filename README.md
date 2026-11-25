@@ -2,6 +2,8 @@
 
 **Version 5.0.0 (GCSA V5)**
 
+[![M8ven Score](https://m8ven.ai/badge/mcp/esgindy/claude-sync-antigravity-gcsa)](https://m8ven.ai/mcp/esgindy/claude-sync-antigravity-gcsa?s=readme)
+
 <p align="center"><img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&logoColor=white"> <img alt="macOS" src="https://img.shields.io/badge/macOS-supported-000000?logo=apple&logoColor=white"> <img alt="Linux" src="https://img.shields.io/badge/Linux-best--effort-FCC624?logo=linux&logoColor=black"></p>
 
 > **New in V5: runs on Windows and macOS.** One codebase, tested on real Windows and macOS installs. The OS is detected at runtime and one command (`node scripts/setup.mjs`) installs and registers everything. Linux is best-effort.
